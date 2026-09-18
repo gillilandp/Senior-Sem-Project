@@ -1,0 +1,936 @@
+/* 1. Reset & Global Variables */
+:root {
+    --bg-cream: #FCFAF6;
+    /* Nền kem sáng */
+    --bg-sage-light: #F2F5F3;
+    /* Nền xanh xám nhạt */
+    --bg-dark-green: #384A42;
+    /* Nền xanh lục đậm (CTA) */
+    --bg-footer: #2D3A34;
+    /* Nền footer */
+    --primary-orange: #E56B42;
+    /* Cam thương hiệu */
+    --text-dark: #1A202C;
+    --text-muted: #718096;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+body {
+    background-color: var(--bg-cream);
+    color: var(--text-dark);
+    line-height: 1.5;
+}
+
+/* 2. Typography Helpers */
+.sub-caption {
+    color: var(--primary-orange);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    display: block;
+}
+
+.section-header {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.section-title {
+    font-family: Georgia, serif;
+    font-size: 32px;
+    color: var(--text-dark);
+    margin: 8px 0;
+    font-weight: 600;
+}
+
+.section-subtitle {
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+/* 3. Header Navbar & Hero Section (Nền Kem Sáng) */
+.navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 80px;
+    max-width: 1440px;
+    margin: 0 auto;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.logo-icon {
+    background-color: #2D3748;
+    color: #FFFFFF;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+}
+
+.nav-links {
+    display: flex;
+    gap: 24px;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: #4A5568;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.auth-buttons {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.btn-link {
+    text-decoration: none;
+    color: #2D3748;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.btn-primary-small {
+    background-color: var(--primary-orange);
+    color: #FFFFFF;
+    padding: 8px 16px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.hero-section {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 40px 80px 80px;
+    max-width: 1440px;
+    margin: 0 auto;
+    gap: 40px;
+}
+
+.hero-content {
+    max-width: 580px;
+}
+
+.hero-title {
+    font-size: 46px;
+    line-height: 1.15;
+    color: var(--text-dark);
+    margin: 16px 0;
+    font-family: Georgia, serif;
+    font-weight: 600;
+}
+
+.hero-description {
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text-muted);
+    margin-bottom: 28px;
+}
+
+.hero-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.btn-primary {
+    background-color: var(--primary-orange);
+    color: #FFFFFF;
+    padding: 12px 24px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.btn-secondary {
+    color: #4A5568;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.social-proof {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.avatar-group {
+    display: flex;
+}
+
+.avatar-group img {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--bg-cream);
+    margin-left: -8px;
+}
+
+.avatar-group img:first-child {
+    margin-left: 0;
+}
+
+.hero-image img {
+    width: 100%;
+    max-width: 480px;
+    border-radius: 16px;
+    object-fit: cover;
+}
+
+/* 4. Custom Profile Setup Section (Nền Xanh Xám Nhạt) */
+.profile-setup-section {
+    background-color: var(--bg-sage-light);
+    padding: 80px 20px;
+    width: 100%;
+}
+
+.filter-tags {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 36px;
+}
+
+.tag {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    color: #4A5568;
+    cursor: pointer;
+}
+
+.tag.active {
+    background: #2D3748;
+    color: #FFFFFF;
+    border-color: #2D3748;
+}
+
+.recipe-card-preview {
+    background: #FFFFFF;
+    border-radius: 12px;
+    padding: 20px;
+    max-width: 760px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    border: 1px solid #EDF2F7;
+}
+
+.recipe-image img {
+    width: 110px;
+    height: 90px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+.recipe-info {
+    flex: 1;
+}
+
+.recipe-badges {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.badge {
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--text-muted);
+    background: #F7FAFC;
+    padding: 3px 6px;
+    border-radius: 4px;
+}
+
+.recipe-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 6px;
+}
+
+.recipe-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+.status-pill {
+    background-color: #FFF5F2;
+    color: var(--primary-orange);
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* 5. The SafePlate System Section (Nền Kem Sáng) */
+.system-section {
+    background-color: var(--bg-cream);
+    padding: 80px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-top: 40px;
+}
+
+.card {
+    background-color: #FFFFFF;
+    border-radius: 12px;
+    padding: 32px 24px;
+    border: 1px solid #EDF2F7;
+}
+
+.card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.card-icon {
+    width: 36px;
+    height: 36px;
+    background-color: #F7FAFC;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+}
+
+.card-number {
+    font-family: Georgia, serif;
+    font-size: 26px;
+    color: #FBD5C8;
+    font-weight: 600;
+}
+
+.card-title {
+    font-size: 16px;
+    color: var(--text-dark);
+    margin-bottom: 10px;
+    font-weight: 700;
+}
+
+.card-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.6;
+}
+
+/* 6. Recipes Section (Nền Kem Sáng) */
+.recipes-section {
+    background-color: var(--bg-cream);
+    padding: 80px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.recipes-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-top: 36px;
+}
+
+.recipe-card {
+    background: #FFFFFF;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #EDF2F7;
+}
+
+.recipe-card-img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+}
+
+.recipe-card-content {
+    padding: 20px;
+}
+
+.recipe-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.recipe-tags span {
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--text-muted);
+    background: #F7FAFC;
+    padding: 3px 6px;
+    border-radius: 4px;
+}
+
+.recipe-card-title {
+    font-size: 16px;
+    color: var(--text-dark);
+    font-weight: 700;
+    margin-bottom: 16px;
+}
+
+.recipe-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+}
+
+.cook-time {
+    color: #A0AEC0;
+}
+
+.view-recipe {
+    color: var(--primary-orange);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+/* 7. Grocery Section (Nền Xanh Xám Nhạt) */
+.grocery-section {
+    background-color: var(--bg-sage-light);
+    padding: 80px 20px;
+    width: 100%;
+}
+
+.grocery-section .section-header {
+    max-width: 1200px;
+    margin: 0 auto 32px;
+}
+
+.brands-grid {
+    max-width: 1200px;
+    margin: 36px auto 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+
+.brand-card {
+    background: #FFFFFF;
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid #EDF2F7;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.brand-icon {
+    width: 40px;
+    height: 40px;
+    background: #FFF5F2;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+
+.brand-name {
+    font-size: 16px;
+    color: var(--text-dark);
+    font-weight: 700;
+}
+
+.brand-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin: 4px 0 12px;
+}
+
+.badge-tag {
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--primary-orange);
+    background: #FFF5F2;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+/* 8. Restaurant Section (Nền Xanh Xám Nhạt) */
+.restaurant-section {
+    background-color: var(--bg-sage-light);
+    padding: 80px 20px;
+    width: 100%;
+}
+
+.restaurant-section .section-header {
+    max-width: 1200px;
+    margin: 0 auto 32px;
+}
+
+.restaurant-container {
+    max-width: 1200px;
+    margin: 36px auto 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    align-items: center;
+}
+
+.restaurant-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.restaurant-card {
+    background: #FFFFFF;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #EDF2F7;
+    display: flex;
+    gap: 16px;
+}
+
+.restaurant-card img {
+    width: 72px;
+    height: 72px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+.restaurant-details {
+    flex: 1;
+}
+
+.restaurant-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.restaurant-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.rating-badge {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 3px 6px;
+    border-radius: 4px;
+}
+
+.rating-badge.green {
+    background: #F0FDF4;
+    color: #16A34A;
+}
+
+.rating-badge.orange {
+    background: #FFF5F2;
+    color: var(--primary-orange);
+}
+
+.restaurant-meta {
+    font-size: 11px;
+    color: #A0AEC0;
+    margin-bottom: 8px;
+}
+
+.restaurant-feature {
+    font-size: 12px;
+    color: #4A5568;
+}
+
+.map-preview {
+    background: #E2E8F0;
+    border-radius: 12px;
+    height: 260px;
+    position: relative;
+    overflow: hidden;
+}
+
+.map-bg {
+    width: 100%;
+    height: 100%;
+    background: #EDF2F7;
+    position: relative;
+}
+
+.map-pin {
+    position: absolute;
+    background: #2D3748;
+    color: #FFFFFF;
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.pin-1 {
+    top: 35%;
+    left: 45%;
+}
+
+.pin-2 {
+    top: 60%;
+    left: 60%;
+}
+
+/* 9. Promise Section (Nền Kem Sáng) */
+.promise-section {
+    background-color: var(--bg-cream);
+    padding: 80px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 40px;
+}
+
+.promise-content {
+    max-width: 580px;
+}
+
+.promise-content .section-title {
+    text-align: left;
+}
+
+.promise-desc {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin: 16px 0 24px;
+}
+
+.promise-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.promise-list li {
+    font-size: 13px;
+    color: #4A5568;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    line-height: 1.5;
+}
+
+.promise-list span {
+    color: var(--primary-orange);
+    font-weight: bold;
+}
+
+.promise-image img {
+    width: 100%;
+    max-width: 440px;
+    border-radius: 16px;
+    object-fit: cover;
+}
+
+/* 10. Testimonials Section (Nền Xanh Xám Nhạt) */
+.testimonials-section {
+    background-color: var(--bg-sage-light);
+    padding: 80px 20px;
+    width: 100%;
+}
+
+.testimonials-section .section-header {
+    max-width: 1200px;
+    margin: 0 auto 32px;
+}
+
+.testimonials-grid {
+    max-width: 1200px;
+    margin: 36px auto 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+.testimonial-card {
+    background: #FFFFFF;
+    border-radius: 12px;
+    padding: 32px;
+    border: 1px solid #EDF2F7;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.quote-icon {
+    font-size: 24px;
+    color: var(--primary-orange);
+    margin-bottom: 12px;
+}
+
+.testimonial-text {
+    font-size: 14px;
+    color: #4A5568;
+    line-height: 1.6;
+    margin-bottom: 24px;
+}
+
+.testimonial-author strong {
+    display: block;
+    font-size: 14px;
+    color: var(--text-dark);
+}
+
+.testimonial-author span {
+    font-size: 12px;
+    color: #A0AEC0;
+}
+
+/* 11. FAQ Section (Nền Kem Sáng) */
+.faq-section {
+    background-color: var(--bg-cream);
+    padding: 80px 20px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 36px;
+}
+
+.faq-item {
+    background: #FFFFFF;
+    border-radius: 8px;
+    border: 1px solid #EDF2F7;
+    padding: 20px;
+}
+
+.faq-question {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-dark);
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.faq-question::-webkit-details-marker {
+    display: none;
+}
+
+.faq-arrow {
+    font-size: 10px;
+    color: #A0AEC0;
+    transition: transform 0.2s ease;
+}
+
+details[open] .faq-arrow {
+    transform: rotate(180deg);
+}
+
+.faq-answer {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-top: 12px;
+}
+
+/* 12. CTA Banner Section (Nền Xanh Lục Đậm) */
+.cta-banner {
+    background-color: var(--bg-dark-green);
+    color: #FFFFFF;
+    text-align: center;
+    padding: 80px 20px;
+}
+
+.cta-content {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.cta-title {
+    font-family: Georgia, serif;
+    font-size: 36px;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+.cta-subtitle {
+    font-size: 14px;
+    color: #CBD5E0;
+    line-height: 1.6;
+    margin-bottom: 28px;
+}
+
+.cta-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+}
+
+.btn-outline {
+    border: 1px solid #A0AEC0;
+    color: #FFFFFF;
+    padding: 12px 24px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* 13. Footer Section (Nền Xanh Lục Tối) */
+.footer {
+    background-color: var(--bg-footer);
+    color: #A0AEC0;
+    padding: 60px 80px 30px;
+    font-size: 13px;
+}
+
+.footer-top {
+    display: flex;
+    justify-content: space-between;
+    max-width: 1200px;
+    margin: 0 auto 40px;
+    gap: 60px;
+}
+
+.footer-brand {
+    max-width: 320px;
+}
+
+.footer-brand .logo-text {
+    color: #FFFFFF;
+}
+
+.footer-desc {
+    margin-top: 16px;
+    line-height: 1.6;
+    font-size: 12px;
+}
+
+.footer-links-group {
+    display: flex;
+    gap: 60px;
+}
+
+.footer-col-title {
+    color: var(--primary-orange);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 16px;
+}
+
+.footer-col ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.footer-col a {
+    color: #CBD5E0;
+    text-decoration: none;
+    font-size: 13px;
+}
+
+.footer-bottom {
+    max-width: 1200px;
+    margin: 0 auto;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 24px;
+}
+
+.disclaimer {
+    font-size: 11px;
+    line-height: 1.5;
+    margin-bottom: 20px;
+    color: var(--text-muted);
+}
+
+.footer-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+}
+
+.social-links {
+    display: flex;
+    gap: 12px;
+}
+
+.social-links a {
+    text-decoration: none;
+    color: #A0AEC0;
+}
+
+/* 14. Back to Top*/
+#backToTopBtn {
+    display: none;
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 99;
+    border: none;
+    outline: none;
+    background-color: var(--primary-orange, #E56B42);
+    /* Dùng màu cam cùng tông giao diện */
+    color: white;
+    cursor: pointer;
+    padding: 12px 16px;
+    border-radius: 50%;
+    font-size: 18px;
+    font-weight: bold;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    transition: opacity 0.3s, transform 0.2s;
+}
+
+#backToTopBtn:hover {
+    background-color: #2D3A34;
+    /* Đổi màu khi di chuột vào */
+    transform: translateY(-3px);
+}
