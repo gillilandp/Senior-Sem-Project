@@ -76,9 +76,15 @@ def login():
       return 'Invalid email or password!'
 
   return render_template('login.html')
+# 4. Forgot Password
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        return f"Sent password reset instructions to email: {email}"
+    return render_template('forgot_password.html')
 
-
-# 4. Log out
+# 5. Log out
 @app.route('/logout')
 @login_required
 def logout():
@@ -90,3 +96,4 @@ if __name__ == '__main__':
   with app.app_context():
     db.create_all()  # Automatically create the database file when the application launches
   app.run(debug=True)
+
