@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Create Profile - SafePlate{% endblock %}
+
+{% block content %}
+
+<div
+    style="max-width: 400px; margin: 50px auto; padding: 20px; background: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+
+    <div style="text-align: center; margin-bottom: 16px;">
+        <img src="{{ url_for('static', filename='Logo.png') }}" alt="SafePlate Logo"
+            style="max-height: 50px; width: auto;">
+    </div>
+    <div style="text-align: left; margin-bottom: 20px;">
+        <a href="{{ url_for('home') }}"
+            style="color: #718096; text-decoration: none; font-size: 0.9rem; font-weight: 500;">
+            ← Back to Home
+        </a>
+    </div>
+    <h2>Create Profile</h2>
+    <form action="/register" method="POST">
+        <div style="margin-bottom: 15px;">
+            <label>Email:</label><br>
+            <input type="email" name="email" required style="width: 100%; padding: 8px; margin-top: 5px;">
+        </div>
+        <div style="margin-bottom: 15px;">
+            <label>Password:</label><br>
+            <input type="password" name="password" required style="width: 100%; padding: 8px; margin-top: 5px;">
+        </div>
+        <button type="submit" class="btn-primary-small" style="width: 100%; border: none; cursor: pointer;">Create
+            Profile</button>
+    </form>
+    <p style="margin-top: 15px; font-size: 14px;"> Had an account?<a href="/login">Sign In</a></p>
+</div>
+</body>
+
+{% endblock %}

@@ -1,15 +1,15 @@
 /* 1. Reset & Global Variables */
 :root {
     --bg-cream: #FCFAF6;
-    /* Nền kem sáng */
+    /* light background */
     --bg-sage-light: #F2F5F3;
-    /* Nền xanh xám nhạt */
+    /* gray background */
     --bg-dark-green: #384A42;
-    /* Nền xanh lục đậm (CTA) */
+    /* Green background (CTA) */
     --bg-footer: #2D3A34;
-    /* Nền footer */
+    /* footer background */
     --primary-orange: #E56B42;
-    /* Cam thương hiệu */
+    /* Orange */
     --text-dark: #1A202C;
     --text-muted: #718096;
 }
@@ -931,6 +931,87 @@ details[open] .faq-arrow {
 
 #backToTopBtn:hover {
     background-color: #2D3A34;
-    /* Đổi màu khi di chuột vào */
+    /* Change color when hovering */
     transform: translateY(-3px);
+}
+
+/* 15. Auth Forms (Login, Register, Forgot Password) */
+.auth-container {
+    max-width: 420px;
+    margin: 60px auto;
+    padding: 32px 28px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+    border: 1px solid #f0f0f0;
+}
+
+.auth-title {
+    color: #2D3748;
+    margin: 0 0 8px 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+.auth-desc {
+    color: #718096;
+    font-size: 0.95rem;
+    text-align: center;
+    margin-bottom: 24px;
+    line-height: 1.5;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 8px;
+    color: #4A5568;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.form-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid #E2E8F0;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    color: #2D3748;
+    outline: none;
+    box-sizing: border-radius;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+}
+
+.form-input:focus {
+    border-color: var(--primary-orange, #E56842);
+}
+
+.auth-btn {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--primary-orange, #E56842);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: background-color 0.2s;
+}
+
+.auth-btn:hover {
+    background-color: #d4532d;
+}
+
+.auth-desc {
+    color: #718096;
+    font-size: 0.95rem;
+    text-align: center;
+    margin-bottom: 24px;
+    line-height: 1.5;
 }
