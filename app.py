@@ -21,14 +21,14 @@ login_manager.login_view = 'login'
 
 # Function to get a connection to the SQLite3 database
 def get_db_connection():
-    '''Establish a connection to the SQLite database.'''
+    """Establish a connection to the SQLite database."""
     conn = sqlite3.connect(DB_NAME)
     # Help convert query results to dictionary-like objects
     conn.row_factory = sqlite3.Row
     return conn
 
 def init_db():
-  '''Create the table if it does not exist in the file safeplate.db.'''
+  """Create the table if it does not exist in the file safeplate.db."""
   conn = get_db_connection()
   conn.execute(
       '''
@@ -52,7 +52,7 @@ class User(UserMixin):
 
 @login_manager.user_loader
 def load_user(user_id):
-  '''Download a user by ID from the database using SQLite connection.'''
+  """Download a user by ID from the database using SQLite connection."""
   conn = get_db_connection()
   user = conn.execute('SELECT * FROM user WHERE id = ?', (int (user_id),)).fetchone()
   conn.close()
