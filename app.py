@@ -540,14 +540,18 @@ def profile():
     restrictions_list = [
         'Gluten-Free',
         'Dairy-Free',
-        'Vegan',
-        'Vegetarian',
         'Nut-Free',
         'Soy-Free',
-        'Halal',
-        'Kosher',
-        'Low-Sodium'
-    ]
+        'Egg-Free',
+        'Wheat-Free',
+        'Sesame-Free',
+        'Fish-Free',
+        'Shellfish-Free',
+        'Vegan',
+        'Vegetarian',
+        'No Pork',
+        'No Beef'
+    ]   
 
     conn = get_db_connection()
 
