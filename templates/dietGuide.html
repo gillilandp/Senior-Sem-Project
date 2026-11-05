@@ -5,7 +5,7 @@
 {% block content %}
 <section class="recipes-search-hero">
     <div class="back-navigation">
-        <button type="button" onclick="history.back()" class="btn-back">
+        <button type="button" onclick="history.back()" class="button-back">
             ⬅ Go Back
         </button>
     </div>
@@ -70,7 +70,7 @@
 
             <!-- Button for go to the diet recipes -->
             <div style="margin-top: 20px;">
-                <a href="{{ url_for('search_recipes', diet=diet_key) }}" class="btn-primary"
+                <a href="{{ url_for('search_recipes', diet=diet_key) }}" class="button-primary"
                     style="display: block; text-align: center; text-decoration: none; padding: 10px; border-radius: 8px; font-size: 0.9rem; font-weight: 600;">
                     Explore {{ diet_key }} Recipes &rArr;
                 </a>

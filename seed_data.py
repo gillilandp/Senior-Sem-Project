@@ -5,9 +5,19 @@ import json
 DB_NAME = 'safeplate.db'
 
 AREA_ISO_MAP = {
-    'Afghan': 'af', 'Albanian': 'al', 'Algerian': 'dz', 'American': 'us', 'Andorran': 'ad',
-    'Angolan': 'ao', 'Antiguan, Barbudan': 'ag', 'Argentine': 'ar', 'Armenian': 'am',
-    'Aruban': 'aw', 'Australian': 'au', 'Austrian': 'at', 'Azerbaijani': 'az', 'Bahamian': 'bs',
+    'Afghan': 'af', 
+    'Albanian': 'al', 
+    'Algerian': 'dz', 
+    'American': 'us', 
+    'Andorran': 'ad',
+    'Angolan': 'ao', 
+    'Antiguan, Barbudan': 'ag', 
+    'Argentine': 'ar', 
+    'Armenian': 'am',
+    'Aruban': 'aw', 
+    'Australian': 'au', 
+    'Austrian': 'at', 
+    'Azerbaijani': 'az', 'Bahamian': 'bs',
     'Bahraini': 'bh', 'Bangladeshi': 'bd', 'Barbadian': 'bb', 'Belarusian': 'by', 'Belgian': 'be',
     'Belizean': 'bz', 'Beninese': 'bj', 'Bermudian': 'bm', 'Bhutanese': 'bt', 'Bolivian': 'bo',
     'Bosnian, Herzegovinian': 'ba', 'Motswana': 'bw', 'Brazilian': 'br', 'British': 'gb',
@@ -78,7 +88,7 @@ def init_all_tables(conn):
         )
     ''')
 
-    # 4. Areas / Countries Table - XÓA BẢNG CŨ ĐỂ TẠO LẠI CẤU TRÚC MỚI
+    # 4. Areas / Countries Table
     conn.execute('DROP TABLE IF EXISTS areas_cache')
     conn.execute('''
         CREATE TABLE IF NOT EXISTS areas_cache (

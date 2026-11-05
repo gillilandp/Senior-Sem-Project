@@ -60,16 +60,16 @@
             <a href="/#safety">Our Safety Standard</a>
             <a href="/#faq">FAQ</a>
         </nav>
-       <div class="auth-buttons">
-    {% if current_user.is_authenticated %}
-        <span>Hello, {{ current_user.email }}</span>
-        <a href="{{ url_for('profile') }}" class="btn-primary-small">My Profile</a>
-        <a href="/logout" class="btn-primary-small">Logout</a>
-    {% else %}
-        <a href="/login" class="btn-primary-small">Sign In</a>
-        <a href="/register" class="btn-primary-small">Create Profile</a>
-    {% endif %}
-</div>
+        <div class="auth-buttons">
+            {% if current_user.is_authenticated %}
+            <span>Hello, {{ current_user.email }}</span>
+            <a href="{{ url_for('profile') }}" class="button-primary-small">My Profile</a>
+            <a href="/logout" class="button-primary-small">Logout</a>
+            {% else %}
+            <a href="/login" class="button-primary-small">Sign In</a>
+            <a href="/register" class="button-primary-small">Create Profile</a>
+            {% endif %}
+        </div>
     </header>
 
     <main>
@@ -84,8 +84,8 @@
             <p class="cta-subtitle">Build your custom safe dietary profile today and unlock hundreds of dietitian-vetted
                 recipes, grocery lists, and safe local tables.</p>
             <div class="cta-buttons">
-                <a href="{{ url_for('profile') }}" class="btn-primary">Build Free Profile &rarr;</a>
-                <a href="#" class="btn-outline">Speak to a Wellness Specialist</a>
+                <a href="{{ url_for('profile') }}" class="button-primary">Build Free Profile &rarr;</a>
+                <a href="#" class="button-outline">Speak to a Wellness Specialist</a>
             </div>
         </div>
     </section>
@@ -156,7 +156,7 @@
     </footer>
 
     <!-- Back to Top Button -->
-    <button id="backToTopBtn" title="Go to top">↑</button>
+    <button id="backToTopButton" title="Go to top">↑</button>
     <script src="{{ url_for('static', filename='main.js') }}"></script>
 </body>
 

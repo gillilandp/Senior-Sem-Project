@@ -251,14 +251,14 @@ body {
     gap: 16px;
 }
 
-.btn-link {
+.button-link {
     text-decoration: none;
     color: #2D3748;
     font-size: 14px;
     font-weight: 500;
 }
 
-.btn-primary-small {
+.button-primary-small {
     background-color: var(--primary-orange);
     color: #FFFFFF;
     padding: 8px 16px;
@@ -305,7 +305,7 @@ body {
     margin-bottom: 28px;
 }
 
-.btn-primary {
+.button-primary {
     background-color: var(--primary-orange);
     color: #FFFFFF;
     padding: 12px 24px;
@@ -315,7 +315,7 @@ body {
     font-size: 14px;
 }
 
-.btn-secondary {
+.button-secondary {
     color: #4A5568;
     text-decoration: none;
     font-size: 14px;
@@ -346,16 +346,52 @@ body {
     margin-left: 0;
 }
 
-.hero-image img {
-    width: 100%;
-    max-width: 480px;
-    border-radius: 16px;
-    object-fit: cover;
+/* Container around the image*/
+.hero-image {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-/* 
-   4. Custom Profile Setup Section 
-    */
+/* Efect for image */
+.hero-image::before {
+    content: "";
+    position: absolute;
+    width: 95%;
+    height: 95%;
+    background: rgba(221, 107, 32, 0.08);
+    border-radius: 24px;
+    transform: rotate(-3deg);
+    /* slightly tilted */
+    z-index: 0;
+}
+
+/* The main picture*/
+.hero-image img {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 520px;
+    height: auto;
+    max-height: 420px;
+    object-fit: cover;
+    border-radius: 20px;
+
+    /* Use BOX-SHADOW*/
+    border: none;
+    box-shadow: 0 20px 40px -15px rgba(221, 107, 32, 0.25),
+        0 10px 20px -10px rgba(0, 0, 0, 0.05);
+    border: 2px solid #3b1c03;
+}
+
+/* Hover effect */
+.hero-image img:hover {
+    transform: translateY(-5deg);
+    box-shadow: 0 25px 50px -12px rgba(221, 107, 32, 0.35);
+}
+
+/* 4. Custom Profile Setup Section */
 .profile-setup-section {
     background-color: var(--bg-sage-light);
     padding: 80px 20px;
@@ -777,6 +813,54 @@ body {
     color: var(--text-muted);
 }
 
+/* Styling for button Reset */
+.button-reset {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 18px;
+    background-color: #f1f5f9;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.button-reset .reset-icon {
+    transition: transform 0.4s ease-in-out;
+}
+
+/* Hover: around 180 */
+.button-reset:hover {
+    background-color: #e2e8f0;
+    color: #1e293b;
+    border-color: #94a3b8;
+}
+
+.button-reset:hover .reset-icon {
+    transform: rotate(-180deg);
+}
+
+/* When click to Reset: Icon go circle */
+.button-reset:active .reset-icon {
+    animation: spinReset 0.6s linear infinite;
+}
+
+@keyframes spinReset {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(-360deg);
+    }
+}
+
 .search-input-wrapper input {
     border: none;
     outline: none;
@@ -800,6 +884,45 @@ body {
     background: var(--bg-dark-green);
     color: #FFFFFF;
     border-color: var(--bg-dark-green);
+}
+
+/* Wrapper and Dropdown */
+.category-select-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+/* Dropdown card */
+.category-select {
+    padding: 10px 36px 10px 16px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #334155;
+    background-color: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.25s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Hover and  Focus */
+.category-select:hover {
+    background-color: #ffffff;
+    border-color: #94a3b8;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.category-select:focus {
+    background-color: #ffffff;
+    border-color: #e05638;
+    box-shadow: 0 0 0 3px rgba(224, 86, 56, 0.15);
+}
+
+.category-select-wrapper:hover .custom-arrow {
+    color: #1e293b;
 }
 
 /* Results Section Layout */
@@ -918,7 +1041,7 @@ body {
     font-weight: 500;
 }
 
-.btn-view-recipe {
+.button-view-recipe {
     display: block;
     text-align: center;
     background: var(--bg-sage-light);
@@ -931,7 +1054,7 @@ body {
     transition: background 0.2s;
 }
 
-.btn-view-recipe:hover {
+.button-view-recipe:hover {
     background: var(--primary-orange);
     color: #FFFFFF;
 }
@@ -1410,7 +1533,7 @@ details[open] .faq-arrow {
     gap: 16px;
 }
 
-.btn-outline {
+.button-outline {
     border: 1px solid #A0AEC0;
     color: #FFFFFF;
     padding: 12px 24px;
@@ -1510,7 +1633,7 @@ details[open] .faq-arrow {
 }
 
 /* 14. Back to Top Button */
-#backToTopBtn {
+#backToTopButton {
     display: none;
     position: fixed;
     bottom: 30px;
@@ -1531,7 +1654,7 @@ details[open] .faq-arrow {
     transition: transform 0.3s ease, background-color 0.3s ease;
 }
 
-#backToTopBtn:hover {
+#backToTopButton:hover {
     background-color: #2D3A34;
     transform: translateY(-3px);
 }
@@ -1591,7 +1714,7 @@ details[open] .faq-arrow {
     border-color: var(--primary-orange);
 }
 
-.auth-btn {
+.auth-button {
     width: 100%;
     padding: 12px;
     background-color: var(--primary-orange);
@@ -1604,7 +1727,7 @@ details[open] .faq-arrow {
     transition: background-color 0.2s;
 }
 
-.auth-btn:hover {
+.auth-button:hover {
     background-color: #d4532d;
 }
 
@@ -1615,6 +1738,11 @@ details[open] .faq-arrow {
     font-weight: 600;
     color: var(--text-muted);
     margin-right: 4px;
+}
+
+.button-reset:hover {
+    background-color: #cbd5e0 !important;
+    color: #2d3748 !important;
 }
 
 .diet-chip {
@@ -1667,10 +1795,27 @@ a.diet-chip.active {
     box-shadow: 0 3px 8px rgba(56, 74, 66, 0.25);
 }
 
+.diet-radio {
+    display: none;
+}
+
+.diet-chip-label {
+    cursor: pointer;
+    display: inline-block;
+}
+
+.diet-radio:checked+.diet-chip {
+    background-color: #e6f4ea;
+    color: #1e4620;
+    border-color: #52796f;
+    font-weight: 700;
+    box-shadow: 0 2px 6px rgba(82, 121, 111, 0.25);
+}
+
 /*Style for a card */
 
-a.btn-back,
-a.btn-back:visited {
+a.button-back,
+a.button-back:visited {
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -1686,7 +1831,7 @@ a.btn-back:visited {
     transition: all 0.25s ease;
 }
 
-a.btn-back:hover {
+a.button-back:hover {
     background-color: #D05932;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(229, 107, 66, 0.35);
@@ -1789,8 +1934,8 @@ a.btn-back:hover {
 }
 
 /* The normal button with fade orange */
-.btn-view-recipe,
-.btn-view-recipe:visited {
+.button-view-recipe,
+.button-view-recipe:visited {
     display: inline-block;
     width: 100%;
     text-align: center;
@@ -1812,7 +1957,7 @@ a.btn-back:hover {
 }
 
 /* Hove, when the user clicks change to orange, white font */
-.btn-view-recipe:hover {
+.button-view-recipe:hover {
     background-color: #E85A2A;
     /* Orange background */
     color: #FFFFFF;
@@ -1825,7 +1970,7 @@ a.btn-back:hover {
 }
 
 /* Active */
-.btn-view-recipe:active {
+.button-view-recipe:active {
     background-color: #D0481B;
     /* A slightly deeper orange.*/
     transform: translateY(0);
@@ -1851,7 +1996,7 @@ a.btn-back:hover {
 }
 
 /* Organge button */
-button.btn-back {
+button.button-back {
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -1869,7 +2014,7 @@ button.btn-back {
 }
 
 /* Hover effect */
-button.btn-back:hover {
+button.button-back:hover {
     background-color: #D05932;
     /* A slightly deeper orange.*/
     transform: translateY(-2px);
@@ -1878,7 +2023,7 @@ button.btn-back:hover {
 }
 
 /* Active effect */
-button.btn-back:active {
+button.button-back:active {
     transform: translateY(0);
 }
 
@@ -1948,7 +2093,7 @@ button.btn-back:active {
     margin-bottom: 20px;
 }
 
-.btn-back {
+.button-back {
     background: #FFFFFF;
     border: 1px solid #E2E8F0;
     padding: 8px 18px;
@@ -1959,7 +2104,7 @@ button.btn-back:active {
     transition: all 0.2s ease;
 }
 
-.btn-back:hover {
+.button-back:hover {
     background: #F7FAFC;
     transform: translateX(-3px);
 }
@@ -2133,7 +2278,7 @@ button.btn-back:active {
 }
 
 /* 21 Styling of load more button */
-.btn-load-more {
+.button-load-more {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -2151,24 +2296,24 @@ button.btn-back:active {
 }
 
 /* Hover effect */
-.btn-load-more:hover {
+.button-load-more:hover {
     background: linear-gradient(135deg, #f0632b 0%, #e25822 100%);
     box-shadow: 0 6px 20px rgba(226, 88, 34, 0.35);
     transform: translateY(-2px);
 }
 
-.btn-load-more:hover .load-icon {
+.button-load-more:hover .load-icon {
     transform: rotate(180deg);
     /* Icon rotates slightly on hover */
 }
 
 /* Subtle icon rotation effect */
-.btn-load-more .load-icon {
+.button-load-more .load-icon {
     transition: transform 0.5s ease;
 }
 
 /* Loading state effect */
-.btn-load-more.loading .load-icon {
+.button-load-more.loading .load-icon {
     animation: spin 1s linear infinite;
 }
 
@@ -2228,3 +2373,94 @@ button.btn-back:active {
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
+/* 22) Carousel for Diet GuidePage */
+
+.diet-carousel-container {
+    position: relative;
+    max-width: 650px;
+    margin: 30px auto;
+    display: flex;
+    align-items: center;
+}
+
+.diet-carousel-track-container {
+    overflow: hidden;
+    width: 100%;
+    border-radius: 16px;
+}
+
+.diet-carousel-track {
+    display: flex;
+    transition: transform 0.4s ease-in-out;
+}
+
+.diet-card-item {
+    min-width: 100%;
+    box-sizing: border-box;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.diet-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.diet-card-header h3 {
+    font-size: 1.4rem;
+    color: #2d3748;
+}
+
+.diet-icon {
+    font-size: 1.8rem;
+}
+
+.diet-for-who {
+    font-size: 0.95rem;
+    color: #4a5568;
+    margin-bottom: 16px;
+}
+
+.diet-food-list {
+    margin-bottom: 16px;
+}
+
+.diet-food-list .list-title {
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: block;
+    margin-bottom: 6px;
+}
+
+.diet-food-list.safe .list-title { color: #2e7d32; }
+.diet-food-list.avoid .list-title { color: #c62828; }
+
+.diet-food-list ul {
+    margin-left: 20px;
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.diet-card-actions {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.link-ingredients {
+    color: #3182ce;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+/* Button Prev/Next for Carousel */
+.diet-carousel-arrow.prev { left: -55px; }
+.diet-carousel-arrow.next { right: -55px; }

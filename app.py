@@ -271,90 +271,48 @@ def logout():
 # TheMealDB API: https://www.themealdb.com/api.php
 @app.route('/recipes', methods=['GET'])
 def search_recipes():
-    keyword = request.args.get('keyword', '').strip()   # 🌟 Đã sửa lấy từ GET
-    diet_filter = request.args.get('diet', '').strip()  # Gluten-Free, Vegan, Dairy-Free...
-    prep_filter = request.args.get('prep', '').strip()  # minimal, standard, complex
-    type_filter = request.args.get('type', '').strip()  # quick, standard, detailed
+    keyword = request.args.get('keyword', '').strip()
     category_filter = request.args.get('category', '').strip()
-    page = int(request.args.get('page', 1))              # Supports "Load More"
+    diet_filter = request.args.get('diet', 'all').strip()
+    prep_filter = request.args.get('prep', '').strip()
+    type_filter = request.args.get('type', '').strip()
+    page = int(request.args.get('page', 1))
     limit = 15
 
-    # Lấy số lượng món tương ứng với trang hiện tại
     fetch_limit = page * limit
     offset = 0
 
     conn = get_db_connection()
-    total_count = 0
 
-    # 1) Filter directly using SQL based on keyword and dietary_tags
+    # 1) Dynamically generate SQL conditions by flexibly 
+    # combining multiple filters
+    conditions = []
+    params = []
+
     if keyword:
-        if diet_filter and diet_filter.lower() != 'all':
-            total_count = conn.execute('''
-                SELECT COUNT(*) FROM recipe_cache 
-                WHERE name LIKE ? AND dietary_tags LIKE ?
-            ''', (f'%{keyword}%', f'%{diet_filter}%')).fetchone()[0]
+        conditions.append("name LIKE ?")
+        params.append(f"%{keyword}%")
 
-            query = '''SELECT raw_data, dietary_tags 
-                    FROM recipe_cache 
-                    WHERE name LIKE ? 
-                    AND dietary_tags LIKE ? 
-                    LIMIT ? OFFSET ?'''
-            rows = conn.execute(query, (f'%{keyword}%', f'%{diet_filter}%', fetch_limit + 1, offset)).fetchall()
-        else:
-            total_count = conn.execute('''
-                SELECT COUNT(*) FROM recipe_cache WHERE name LIKE ?
-            ''', (f'%{keyword}%',)).fetchone()[0]
+    if category_filter:
+        conditions.append("category = ?")
+        params.append(category_filter)
 
-            query = '''SELECT raw_data, dietary_tags  
-                    FROM recipe_cache 
-                    WHERE name LIKE ? 
-                    LIMIT ? OFFSET ?'''
-            rows = conn.execute(query, (f'%{keyword}%', fetch_limit + 1, offset)).fetchall()
+    if diet_filter and diet_filter.lower() != 'all':
+        conditions.append("dietary_tags LIKE ?")
+        params.append(f"%{diet_filter}%")
 
-    elif category_filter:
-        if diet_filter and diet_filter.lower() != 'all':
-            total_count = conn.execute('''
-                SELECT COUNT(*) FROM recipe_cache 
-                WHERE category = ? AND dietary_tags LIKE ?
-            ''', (category_filter, f'%{diet_filter}%')).fetchone()[0]
+    where_clause = " WHERE " + " AND ".join(conditions) if conditions else ""
 
-            query = '''SELECT raw_data, dietary_tags 
-                    FROM recipe_cache 
-                    WHERE category = ? AND dietary_tags LIKE ? 
-                    LIMIT ? OFFSET ?'''
-            rows = conn.execute(query, (category_filter, f'%{diet_filter}%', fetch_limit + 1, offset)).fetchall()
-        else:
-            total_count = conn.execute('''
-                SELECT COUNT(*) FROM recipe_cache WHERE category = ?
-            ''', (category_filter,)).fetchone()[0]
+    # 2) Count the total number of records that match the criteria
+    count_query = f"SELECT COUNT(*) FROM recipe_cache{where_clause}"
+    total_count = conn.execute(count_query, params).fetchone()[0]
 
-            query = '''SELECT raw_data, dietary_tags
-                    FROM recipe_cache 
-                    WHERE category = ? 
-                    LIMIT ? OFFSET ?'''
-            rows = conn.execute(query, (category_filter, fetch_limit + 1, offset)).fetchall()
-
-    elif diet_filter and diet_filter.lower() != 'all':
-        total_count = conn.execute('''
-            SELECT COUNT(*) FROM recipe_cache WHERE dietary_tags LIKE ?
-        ''', (f'%{diet_filter}%',)).fetchone()[0]
-
-        query = '''SELECT raw_data, dietary_tags  
-                FROM recipe_cache 
-                WHERE dietary_tags LIKE ? 
-                LIMIT ? OFFSET ?'''
-        rows = conn.execute(query, (f'%{diet_filter}%', fetch_limit + 1, offset)).fetchall()
-
-    else:
-        total_count = conn.execute('SELECT COUNT(*) FROM recipe_cache').fetchone()[0]
-        rows = conn.execute('''
-            SELECT raw_data, dietary_tags 
-            FROM recipe_cache 
-            LIMIT ? OFFSET ?''', (fetch_limit + 1, offset)).fetchall()
-
+    # 3) Retrieve a RANDOM list of dishes from SQLite (ORDER BY RANDOM())
+    data_query = f"SELECT raw_data, dietary_tags FROM recipe_cache{where_clause} ORDER BY RANDOM() LIMIT ? OFFSET ?"
+    rows = conn.execute(data_query, params + [fetch_limit + 1, offset]).fetchall()
     conn.close()
 
-    # 2) Read out the data and assign secondary labels
+    # 4) Read data and assign sub-labels
     has_more = len(rows) > fetch_limit
     display_rows = rows[:fetch_limit]
     meals = []
