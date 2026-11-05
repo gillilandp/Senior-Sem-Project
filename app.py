@@ -540,60 +540,114 @@ def profile():
     restrictions_list = [
         'Gluten-Free',
         'Dairy-Free',
-        'Vegan',
-        'Vegetarian',
         'Nut-Free',
         'Soy-Free',
-        'Halal',
-        'Kosher',
-        'Low-Sodium'
-    ]
+        'Egg-Free',
+        'Wheat-Free',
+        'Sesame-Free',
+        'Fish-Free',
+        'Shellfish-Free',
+        'Vegan',
+        'Vegetarian',
+        'No Pork',
+        'No Beef'
+    ]   
 
     conn = get_db_connection()
 
     if request.method == 'POST':
 
-        # Get the restrictions selected by the user
-        selected = request.form.getlist('restrictions')
+        # Get personal information
+        first_name = request.form.get('first_name', '').strip()
+        last_name = request.form.get('last_name', '').strip()
 
-        # Only accept restrictions from our approved list
+        # Get dietary information
+        selected = request.form.getlist('restrictions')
         selected = [r for r in selected if r in restrictions_list]
 
-        # Convert the list into a string for SQLite
         restrictions_string = ','.join(selected)
 
-        # Save or update the user's dietary profile
+        ingredients_to_avoid = request.form.get(
+            'ingredients_to_avoid', ''
+        ).strip()
+
+        dietary_notes = request.form.get(
+            'dietary_notes', ''
+        ).strip()
+
+        # Update the user's personal information
         conn.execute('''
-            INSERT INTO dietary_profile (user_id, restrictions)
-            VALUES (?, ?)
+            UPDATE user
+            SET first_name = ?, last_name = ?
+            WHERE id = ?
+        ''', (first_name, last_name, current_user.id))
+
+        # Save or update dietary information
+        conn.execute('''
+            INSERT INTO dietary_profile (
+                user_id,
+                restrictions,
+                ingredients_to_avoid,
+                dietary_notes
+            )
+            VALUES (?, ?, ?, ?)
+
             ON CONFLICT(user_id)
-            DO UPDATE SET restrictions = excluded.restrictions
-        ''', (current_user.id, restrictions_string))
+            DO UPDATE SET
+                restrictions = excluded.restrictions,
+                ingredients_to_avoid = excluded.ingredients_to_avoid,
+                dietary_notes = excluded.dietary_notes
+
+        ''', (
+            current_user.id,
+            restrictions_string,
+            ingredients_to_avoid,
+            dietary_notes
+        ))
 
         conn.commit()
         conn.close()
 
-        flash('Your dietary profile has been saved!', 'success')
+        flash('Your profile has been updated successfully!', 'success')
 
-        return redirect(url_for('home'))
-    
-    # Retrieve the user's saved restrictions
-    saved_profile = conn.execute(
-        'SELECT restrictions FROM dietary_profile WHERE user_id = ?',
-        (current_user.id,)
-    ).fetchone()
+        return redirect(url_for('profile'))
+
+    # Retrieve personal information
+    user = conn.execute('''
+        SELECT first_name, last_name, email
+        FROM user
+        WHERE id = ?
+    ''', (current_user.id,)).fetchone()
+
+    # Retrieve dietary information
+    saved_profile = conn.execute('''
+        SELECT restrictions, ingredients_to_avoid, dietary_notes
+        FROM dietary_profile
+        WHERE user_id = ?
+    ''', (current_user.id,)).fetchone()
 
     conn.close()
 
     selected_restrictions = []
+    ingredients_to_avoid = ''
+    dietary_notes = ''
 
-    if saved_profile and saved_profile['restrictions']:
-        selected_restrictions = saved_profile['restrictions'].split(',')
+    if saved_profile:
+        if saved_profile['restrictions']:
+            selected_restrictions = saved_profile['restrictions'].split(',')
+
+        ingredients_to_avoid = saved_profile['ingredients_to_avoid'] or ''
+        dietary_notes = saved_profile['dietary_notes'] or ''
 
     return render_template(
         'profile.html',
         restrictions_list=restrictions_list,
-        selected_restrictions=selected_restrictions
+        selected_restrictions=selected_restrictions,
+        first_name=user['first_name'] if user else '',
+        last_name=user['last_name'] if user else '',
+        email=user['email'] if user else '',
+        ingredients_to_avoid=ingredients_to_avoid,
+        dietary_notes=dietary_notes
     )
 
 @app.route('/diet-guide')
