@@ -209,8 +209,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     // 5) Save the state before click on card
     document.addEventListener("click", function (e) {
-        const cardLink = e.target.closest(".recipe-card-link");
-        if (cardLink) {
+        const Link = e.target.closest("a, .recipe-card-link, .button-primary");
+        if (Link) {
             sessionStorage.setItem(pageKey + '_scrollY', window.scrollY);
 
             const currentTrack = document.querySelector(".carousel-track-container");
@@ -233,51 +233,52 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
     });
+});
 
-    // 6) Restore State when clicking "GO BACK" and  Return to the previous page (recipes.html or main.html) 
-    window.addEventListener("pageshow", function () {
-        const pageKey = window.location.pathname;
+// 6) Restore State when clicking "GO BACK" and  Return to the previous page (recipes.html or main.html) 
+window.addEventListener("pageshow", function () {
+    const pageKey = window.location.pathname;
 
-        // 6a. Restore the list of items loaded via "Load More" and the item count
-        const savedContainerHTML = sessionStorage.getItem(pageKey + '_containerHTML');
-        const savedCountText = sessionStorage.getItem(pageKey + '_countText');
-        const savedLoadMoreHTML = sessionStorage.getItem(pageKey + '_loadMoreHTML');
+    // 6a. Restore the list of items loaded via "Load More" and the item count
+    const savedContainerHTML = sessionStorage.getItem(pageKey + '_containerHTML');
+    const savedCountText = sessionStorage.getItem(pageKey + '_countText');
+    const savedLoadMoreHTML = sessionStorage.getItem(pageKey + '_loadMoreHTML');
 
-        const container = document.getElementById('recipe-container');
-        const countElement = document.getElementById('displayed-count');
-        const loadMoreWrapper = document.querySelector('.load-more-wrapper');
+    const container = document.getElementById('recipe-container');
+    const countElement = document.getElementById('displayed-count');
+    const loadMoreWrapper = document.querySelector('.load-more-wrapper');
 
-        if (savedContainerHTML && container) {
-            container.innerHTML = savedContainerHTML;
-            sessionStorage.removeItem(pageKey + '_containerHTML');
-        }
-        if (savedCountText && countElement) {
-            countElement.innerText = savedCountText;
-            sessionStorage.removeItem(pageKey + '_countText');
-        }
-        if (savedLoadMoreHTML && loadMoreWrapper) {
-            loadMoreWrapper.innerHTML = savedLoadMoreHTML;
-            sessionStorage.removeItem(pageKey + '_loadMoreHTML');
-        }
+    if (savedContainerHTML && container) {
+        container.innerHTML = savedContainerHTML;
+        sessionStorage.removeItem(pageKey + '_containerHTML');
+    }
+    if (savedCountText && countElement) {
+        countElement.innerText = savedCountText;
+        sessionStorage.removeItem(pageKey + '_countText');
+    }
+    if (savedLoadMoreHTML && loadMoreWrapper) {
+        loadMoreWrapper.innerHTML = savedLoadMoreHTML;
+        sessionStorage.removeItem(pageKey + '_loadMoreHTML');
+    }
 
-        // 6b. Restore the horizontal scroll position of the carousel (main.html)
-        const track = document.querySelector(".carousel-track-container");
-        const savedTrackScrollLeft = sessionStorage.getItem(pageKey + '_trackScrollLeft');
-        if (track && savedTrackScrollLeft !== null) {
-            track.scrollLeft = parseInt(savedTrackScrollLeft, 10);
-            sessionStorage.removeItem(pageKey + '_trackScrollLeft');
-        }
+    // 6b. Restore the horizontal scroll position of the carousel (main.html)
+    const track = document.querySelector(".carousel-track-container");
+    const savedTrackScrollLeft = sessionStorage.getItem(pageKey + '_trackScrollLeft');
+    if (track && savedTrackScrollLeft !== null) {
+        track.scrollLeft = parseInt(savedTrackScrollLeft, 10);
+        sessionStorage.removeItem(pageKey + '_trackScrollLeft');
+    }
 
-        // 6c. Restore vertical page scroll position
-        if ('scrollRestoration' in history) {
-            history.scrollRestoration = 'manual'; // Avoid the browser's default scroll restoration behavior
-        }
+    // 6c. Restore vertical page scroll position
+    if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual'; // Avoid the browser's default scroll restoration behavior
+    }
 
-        const savedScrollY = sessionStorage.getItem(pageKey + '_scrollY');
-        if (savedScrollY !== null) {
-            setTimeout(function () {
-                window.scrollTo(0, parseInt(savedScrollY, 10));
-                sessionStorage.removeItem(pageKey + '_scrollY');
-            }, 120);
-        }
-    });
+    const savedScrollY = sessionStorage.getItem(pageKey + '_scrollY');
+    if (savedScrollY !== null) {
+        setTimeout(function () {
+            window.scrollTo(0, parseInt(savedScrollY, 10));
+            sessionStorage.removeItem(pageKey + '_scrollY');
+        }, 120);
+    }
+});
