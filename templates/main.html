@@ -42,7 +42,6 @@
     </div>
 
     <div class="filter-tags">
-        <button type="button" class="diet-chip active" data-diet="all">🌿 All</button>
         <button type="button" class="diet-chip" data-diet="Gluten-Free">🍚 Gluten-Free</button>
         <button type="button" class="diet-chip" data-diet="Dairy-Free">🥛 Dairy-free</button>
         <button type="button" class="diet-chip" data-diet="Vegan">🥬 Vegan</button>
@@ -54,14 +53,15 @@
         <button type="button" class="diet-chip" data-diet="Low-Sodium">🧂 Low-Sodium</button>
     </div>
 
-    <div class="diet-carousel-container">
-        <button type="button" id="dietPrevButton" class="carousel-arrow prev">&#10094;</button>
+    <div class="coverflow-carousel-wrapper">
+        <button type="button" id="dietPrevButton" class="coverflow-arrow prev">&#10094;</button>
 
-        <div class="diet-carousel-track-container">
-            <div class="diet-carousel-track">
+        <!--  Carousel 3D -->
+        <div class="coverflow-container">
+            <div class="coverflow-track">
                 {% if diet_info %}
                 {% for diet_key, info in diet_info.items() %}
-                <div class="diet-card-item" data-diet-key="{{ diet_key }}">
+                <div class="coverflow-card" data-diet-key="{{ diet_key }}">
                     <div class="diet-card-header">
                         <h3>{{ info.title }}</h3>
                         <span class="diet-icon">{{ info.icon }}</span>
@@ -90,11 +90,11 @@
                     <div class="diet-card-actions">
                         {% if diet_ingredients and diet_ingredients.get(diet_key) %}
                         <a href="{{ url_for('diet_ingredients_detail', diet_name=diet_key) }}" class="link-ingredients">
-                            🔍 View full list of ingredients ({{ diet_ingredients[diet_key]|length }}) &rarr;
+                            🔍 View full list of ingredients ({{ diet_ingredients[diet_key]|length }}) &rArr;
                         </a>
                         {% endif %}
                         <a href="{{ url_for('search_recipes', diet=diet_key) }}" class="button-primary">
-                            Explore {{ diet_key }} Recipes &rarr;
+                            Explore {{ diet_key }} Recipes &rArr;
                         </a>
                     </div>
                 </div>
@@ -103,7 +103,7 @@
             </div>
         </div>
 
-        <button type="button" id="dietNextButton" class="carousel-arrow next">&#10095;</button>
+        <button type="button" id="dietNextButton" class="coverflow-arrow next">&#10095;</button>
     </div>
 </section>
 

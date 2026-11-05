@@ -62,26 +62,40 @@ document.addEventListener("DOMContentLoaded", function () {
         // Update the arrows when the page loads
         updateArrows();
     }
-    // 2) Diet Carousel
-    const dietTrack = document.querySelector(".diet-carousel-track");
-    const dietCards = document.querySelectorAll(".diet-card-item");
+    // 2) Coverflow 3D Diet Carousel
+    const coverflowCards = document.querySelectorAll(".coverflow-card");
     const dietPrevButton = document.getElementById("dietPrevButton");
     const dietNextButton = document.getElementById("dietNextButton");
     const dietFilterButtons = document.querySelectorAll(".profile-setup-section .diet-chip");
 
-    if (dietTrack && dietCards.length > 0) {
-        let currentDietIndex = 0;
-        const totalDietCards = dietCards.length;
+    if (coverflowCards.length > 0) {
+        let currentIndex = 0;
+        const totalCards = coverflowCards.length;
 
-        function updateDietCarousel(index) {
-            if (index < 0) index = 0;
-            if (index >= totalDietCards) index = totalDietCards - 1;
+        function updateCoverflow(index) {
 
-            currentDietIndex = index;
-            dietTrack.style.transform = 'translateX(-' + (currentDietIndex * 100) + '%)';
+            currentIndex = (index + totalCards) % totalCards; // Wrap around
 
-            // Active Filter button to connect with the current diet card
-            const currentDietKey = (dietCards[currentDietIndex].getAttribute("data-diet-key") || "").toLowerCase().trim();
+            coverflowCards.forEach((card, i) => {
+                card.className = "coverflow-card"; // Reset old class
+                let diff = i - currentIndex;
+
+                if (diff < -Math.floor(totalCards / 2)) diff += totalCards;
+                if (diff > Math.floor(totalCards / 2)) diff -= totalCards;
+
+                if (diff === 0) {
+                    card.classList.add("active");
+                } else if (diff === -1) {
+                    card.classList.add("prev-1");
+                } else if (diff === 1) {
+                    card.classList.add("next-1");
+                } else {
+                    card.classList.add("hidden");
+                }
+            });
+
+            // Synchronize the Active effect for the Diet Chip button
+            const currentDietKey = (coverflowCards[currentIndex].getAttribute("data-diet-key") || "").toLowerCase().trim();
             dietFilterButtons.forEach(button => {
                 const buttonDiet = (button.getAttribute("data-diet") || "").toLowerCase().trim();
                 if (buttonDiet === currentDietKey) {
@@ -92,43 +106,54 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
 
+        // Next and Prev buttons to navigate the coverflow
         if (dietNextButton) {
-            dietNextButton.addEventListener("click", function () {
-                if (currentDietIndex < totalDietCards - 1) {
-                    updateDietCarousel(currentDietIndex + 1);
-                } else {
-                    updateDietCarousel(0);
-                }
+            dietNextButton.addEventListener("click", () => {
+                updateCoverflow(currentIndex + 1);
             });
         }
 
         if (dietPrevButton) {
-            dietPrevButton.addEventListener("click", function () {
-                if (currentDietIndex > 0) {
-                    updateDietCarousel(currentDietIndex - 1);
-                } else {
-                    updateDietCarousel(totalDietCards - 1);
-                }
+            dietPrevButton.addEventListener("click", () => {
+                updateCoverflow(currentIndex - 1);
             });
         }
 
+        // Click directly on the tabs on either side to rotate to that tab
+        coverflowCards.forEach((card, index) => {
+            card.addEventListener("click", (e) => {
+                if (e.target.closest("a, button")) return;
+                updateCoverflow(index);
+            });
+        });
+
+        // Click button Diet Chip to change
         dietFilterButtons.forEach(button => {
             button.addEventListener("click", function () {
-                const selectedDiet = (this.getAttribute("data-diet") || "").toLowerCase().trim();
+                const selectedDiet = normalizeKey(this.getAttribute("data-diet"));
 
                 if (selectedDiet === "all") {
-                    updateDietCarousel(0);
+                    updateCoverflow(0);
                     return;
                 }
 
-                dietCards.forEach((card, index) => {
-                    const cardKey = (card.getAttribute("data-diet-key") || "").toLowerCase().trim();
+                let targetIndex = -1;
+                coverflowCards.forEach((card, index) => {
+                    const cardKey = normalizeKey(
+                        card.getAttribute("data-diet-key") ||
+                        card.getAttribute("data-dietkey")
+                    );
                     if (cardKey === selectedDiet) {
-                        updateDietCarousel(index);
+                        targetIndex = index;
                     }
                 });
+
+                if (targetIndex !== -1) {
+                    updateCoverflow(targetIndex);
+                }
             });
         });
+        updateCoverflow(0);
     }
     // 3) Back to Top Button
     const backToTopButton = document.getElementById("backToTopButton");

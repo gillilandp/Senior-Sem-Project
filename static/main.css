@@ -2374,42 +2374,91 @@ button.button-back:active {
     text-overflow: ellipsis;
 }
 
-/* 22) Carousel for Diet GuidePage */
-
-.diet-carousel-container {
+/* 22) Coverflow 3D Carousel for Diet Section */
+.coverflow-carousel-wrapper {
     position: relative;
-    max-width: 650px;
-    margin: 30px auto;
+    max-width: 1000px;
+    margin: 40px auto;
     display: flex;
     align-items: center;
+    justify-content: center;
 }
 
-.diet-carousel-track-container {
-    overflow: hidden;
+.coverflow-container {
     width: 100%;
-    border-radius: 16px;
-}
-
-.diet-carousel-track {
+    height: 520px;
+    perspective: 1200px;
+    overflow: hidden;
+    position: relative;
     display: flex;
-    transition: transform 0.4s ease-in-out;
+    align-items: center;
+    justify-content: center;
 }
 
-.diet-card-item {
-    min-width: 100%;
+.coverflow-track {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+}
+
+.coverflow-card {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 380px;
+    height: 460px;
+    background: #fff;
+    border-radius: 20px;
+    padding: 24px;
+    border: 1px solid #edf2f7;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+    transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
     box-sizing: border-box;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 16px;
-    padding: 28px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
 }
 
+/* Card States (Center, Flanks & Hidden) */
+.coverflow-card.active {
+    transform: translate(-50%, -50%) scale(1.02);
+    z-index: 10;
+    opacity: 1;
+    filter: blur(0);
+    border: 2px solid var(--primary-orange);
+    box-shadow: 0 15px 35px rgba(229, 107, 66, 0.2);
+}
+
+.coverflow-card.prev-1 {
+    transform: translate(-125%, -50%) scale(0.88);
+    z-index: 5;
+    opacity: 0.55;
+    filter: blur(1px);
+}
+
+.coverflow-card.next-1 {
+    transform: translate(25%, -50%) scale(0.88);
+    z-index: 5;
+    opacity: 0.55;
+    filter: blur(1px);
+}
+
+.coverflow-card.hidden {
+    transform: translate(-50%, -50%) scale(0.6);
+    z-index: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Content Styles inside Card */
 .diet-card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
 }
 
 .diet-card-header h3 {
@@ -2424,34 +2473,39 @@ button.button-back:active {
 .diet-for-who {
     font-size: 0.95rem;
     color: #4a5568;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
 }
 
 .diet-food-list {
-    margin-bottom: 16px;
+    margin-bottom: 12px;
 }
 
 .diet-food-list .list-title {
     font-weight: 600;
     font-size: 0.9rem;
     display: block;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
 }
 
-.diet-food-list.safe .list-title { color: #2e7d32; }
-.diet-food-list.avoid .list-title { color: #c62828; }
+.diet-food-list.safe .list-title {
+    color: #2e7d32;
+}
+
+.diet-food-list.avoid .list-title {
+    color: #c62828;
+}
 
 .diet-food-list ul {
-    margin-left: 20px;
-    font-size: 0.9rem;
+    margin-left: 18px;
+    font-size: 0.88rem;
     color: #555;
 }
 
 .diet-card-actions {
-    margin-top: 20px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
+    margin-top: auto;
 }
 
 .link-ingredients {
@@ -2461,6 +2515,33 @@ button.button-back:active {
     font-size: 0.9rem;
 }
 
-/* Button Prev/Next for Carousel */
-.diet-carousel-arrow.prev { left: -55px; }
-.diet-carousel-arrow.next { right: -55px; }
+/* Arrows Navigation */
+.coverflow-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 48px;
+    height: 48px;
+    background: var(--primary-orange);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    font-size: 22px;
+    cursor: pointer;
+    z-index: 20;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+}
+
+.coverflow-arrow:hover {
+    background: #d4532d;
+    transform: translateY(-50%) scale(1.1);
+}
+
+.coverflow-arrow.prev {
+    left: 10px;
+}
+
+.coverflow-arrow.next {
+    right: 10px;
+}
