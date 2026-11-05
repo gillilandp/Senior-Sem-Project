@@ -62,10 +62,7 @@ document.addEventListener("DOMContentLoaded", function () {
         // Update the arrows when the page loads
         updateArrows();
     }
-
-
-    // 2) Back to Top Button
-
+    // 2) Diet Carousel
     const dietTrack = document.querySelector(".diet-carousel-track");
     const dietCards = document.querySelectorAll(".diet-card-item");
     const dietPrevButton = document.getElementById("dietPrevButton");
@@ -81,11 +78,13 @@ document.addEventListener("DOMContentLoaded", function () {
             if (index >= totalDietCards) index = totalDietCards - 1;
 
             currentDietIndex = index;
-            dietTrack.style.transform = `translateX(-${currentDietIndex * 100}%)`;
+            dietTrack.style.transform = 'translateX(-' + (currentDietIndex * 100) + '%)';
 
-            const currentDietKey = dietCards[currentDietIndex].getAttribute("data-diet-key");
+            // Active Filter button to connect with the current diet card
+            const currentDietKey = (dietCards[currentDietIndex].getAttribute("data-diet-key") || "").toLowerCase().trim();
             dietFilterButtons.forEach(button => {
-                if (button.getAttribute("data-diet") === currentDietKey) {
+                const buttonDiet = (button.getAttribute("data-diet") || "").toLowerCase().trim();
+                if (buttonDiet === currentDietKey) {
                     button.classList.add("active");
                 } else {
                     button.classList.remove("active");
@@ -115,7 +114,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         dietFilterButtons.forEach(button => {
             button.addEventListener("click", function () {
-                const selectedDiet = this.getAttribute("data-diet");
+                const selectedDiet = (this.getAttribute("data-diet") || "").toLowerCase().trim();
 
                 if (selectedDiet === "all") {
                     updateDietCarousel(0);
@@ -123,17 +122,17 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
 
                 dietCards.forEach((card, index) => {
-                    if (card.getAttribute("data-diet-key") === selectedDiet) {
+                    const cardKey = (card.getAttribute("data-diet-key") || "").toLowerCase().trim();
+                    if (cardKey === selectedDiet) {
                         updateDietCarousel(index);
                     }
                 });
             });
         });
     }
-
+    // 3) Back to Top Button
     const backToTopButton = document.getElementById("backToTopButton");
     if (backToTopButton) {
-        // Appear button arrow after roll down 300px
         window.addEventListener("scroll", function () {
             if (window.scrollY > 20 || document.documentElement.scrollTop > 20) {
                 backToTopButton.style.display = "block";
@@ -142,7 +141,6 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
 
-        // Smooth when click button
         backToTopButton.addEventListener("click", function () {
             window.scrollTo({
                 top: 0,
@@ -151,11 +149,10 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // 3) Load More Recipes Button
+    // 4) Load More Recipes Button
     const loadMoreButton = document.getElementById('load-more-button');
     if (loadMoreButton) {
         const urlParams = new URLSearchParams(window.location.search);
-
         let currentPage = parseInt(urlParams.get('page')) || 1;
 
         loadMoreButton.addEventListener('click', function () {
@@ -164,8 +161,9 @@ document.addEventListener("DOMContentLoaded", function () {
             const currentParams = new URLSearchParams(window.location.search);
             currentParams.set('page', currentPage);
 
-            // currentParams
-            const newUrl = `${window.location.pathname}?${currentParams.toString()}`;
+            const url = new URL(window.location.href);
+            url.search = currentParams.toString();
+            const newUrl = url.pathname + url.search;
             window.history.replaceState({ page: currentPage }, '', newUrl);
 
             loadMoreButton.classList.add('loading');
@@ -177,27 +175,21 @@ document.addEventListener("DOMContentLoaded", function () {
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(html, 'text/html');
 
-                    // Retrieve the new cards from the fetch operation
                     let allFetchedCards = doc.querySelectorAll('#recipe-container .recipe-card-link');
-
                     const container = document.getElementById('recipe-container');
                     const currentCardCount = container ? container.querySelectorAll('.recipe-card-link').length : 0;
 
-                    // Extract the new cards
                     const newCards = Array.from(allFetchedCards).slice(currentCardCount);
 
                     if (newCards.length > 0 && container) {
-                        // Insert new cards into container
                         newCards.forEach(card => container.appendChild(card));
 
-                        // Update the displayed figure
                         const totalVisibleCards = container.querySelectorAll('.recipe-card-link').length;
                         const countElement = document.getElementById('displayed-count');
                         if (countElement) {
                             countElement.innerText = totalVisibleCards;
                         }
 
-                        // Check if reached end of recipes
                         if (allFetchedCards.length < currentPage * 15) {
                             loadMoreButton.parentElement.innerHTML = '<div class="reached-end-badge"><span class="end-icon">✨</span><span>You\'ve reached the end of the list!</span></div>';
                         } else {
@@ -215,80 +207,77 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
         });
     }
-    // 4) Save the state before click on card
+    // 5) Save the state before click on card
     document.addEventListener("click", function (e) {
         const cardLink = e.target.closest(".recipe-card-link");
         if (cardLink) {
-            // Save the current page scroll position
-            sessionStorage.setItem(`${pageKey}_scrollY`, window.scrollY);
+            sessionStorage.setItem(pageKey + '_scrollY', window.scrollY);
 
-            // If a carousel is present (main.html), also save the horizontal scroll position.
-            if (track) {
-                sessionStorage.setItem(`${pageKey}_trackScrollLeft`, track.scrollLeft);
+            const currentTrack = document.querySelector(".carousel-track-container");
+            if (currentTrack) {
+                sessionStorage.setItem(pageKey + '_trackScrollLeft', currentTrack.scrollLeft);
             }
 
-            // If there is a list of recipes that has been "loaded more" (recipes.html), 
-            // save the entire DOM and the number of recipes.
             const container = document.getElementById('recipe-container');
             const countElement = document.getElementById('displayed-count');
             const loadMoreWrapper = document.querySelector('.load-more-wrapper');
 
             if (container) {
-                sessionStorage.setItem(`${pageKey}_containerHTML`, container.innerHTML);
+                sessionStorage.setItem(pageKey + '_containerHTML', container.innerHTML);
             }
             if (countElement) {
-                sessionStorage.setItem(`${pageKey}_countText`, countElement.innerText);
+                sessionStorage.setItem(pageKey + '_countText', countElement.innerText);
             }
             if (loadMoreWrapper) {
-                sessionStorage.setItem(`${pageKey}_loadMoreHTML`, loadMoreWrapper.innerHTML);
+                sessionStorage.setItem(pageKey + '_loadMoreHTML', loadMoreWrapper.innerHTML);
             }
         }
     });
-});
 
-// 5) RESTORING STATE WHEN CLICKING "GO BACK" and  RETURNING TO THE PAGE 
-window.addEventListener("pageshow", function () {
-    const pageKey = window.location.pathname;
+    // 6) Restore State when clicking "GO BACK" and  Return to the previous page (recipes.html or main.html) 
+    window.addEventListener("pageshow", function () {
+        const pageKey = window.location.pathname;
 
-    // 5a. Restore the list of items loaded via "Load More" and the item count
-    const savedContainerHTML = sessionStorage.getItem(`${pageKey}_containerHTML`);
-    const savedCountText = sessionStorage.getItem(`${pageKey}_countText`);
-    const savedLoadMoreHTML = sessionStorage.getItem(`${pageKey}_loadMoreHTML`);
+        // 6a. Restore the list of items loaded via "Load More" and the item count
+        const savedContainerHTML = sessionStorage.getItem(pageKey + '_containerHTML');
+        const savedCountText = sessionStorage.getItem(pageKey + '_countText');
+        const savedLoadMoreHTML = sessionStorage.getItem(pageKey + '_loadMoreHTML');
 
-    const container = document.getElementById('recipe-container');
-    const countElement = document.getElementById('displayed-count');
-    const loadMoreWrapper = document.querySelector('.load-more-wrapper');
+        const container = document.getElementById('recipe-container');
+        const countElement = document.getElementById('displayed-count');
+        const loadMoreWrapper = document.querySelector('.load-more-wrapper');
 
-    if (savedContainerHTML && container) {
-        container.innerHTML = savedContainerHTML;
-        sessionStorage.removeItem(`${pageKey}_containerHTML`);
-    }
-    if (savedCountText && countElement) {
-        countElement.innerText = savedCountText;
-        sessionStorage.removeItem(`${pageKey}_countText`);
-    }
-    if (savedLoadMoreHTML && loadMoreWrapper) {
-        loadMoreWrapper.innerHTML = savedLoadMoreHTML;
-        sessionStorage.removeItem(`${pageKey}_loadMoreHTML`);
-    }
+        if (savedContainerHTML && container) {
+            container.innerHTML = savedContainerHTML;
+            sessionStorage.removeItem(pageKey + '_containerHTML');
+        }
+        if (savedCountText && countElement) {
+            countElement.innerText = savedCountText;
+            sessionStorage.removeItem(pageKey + '_countText');
+        }
+        if (savedLoadMoreHTML && loadMoreWrapper) {
+            loadMoreWrapper.innerHTML = savedLoadMoreHTML;
+            sessionStorage.removeItem(pageKey + '_loadMoreHTML');
+        }
 
-    // 5b. Restore the horizontal scroll position of the carousel (main.html)
-    const track = document.querySelector(".carousel-track-container");
-    const savedTrackScrollLeft = sessionStorage.getItem(`${pageKey}_trackScrollLeft`);
-    if (track && savedTrackScrollLeft !== null) {
-        track.scrollLeft = parseInt(savedTrackScrollLeft, 10);
-        sessionStorage.removeItem(`${pageKey}_trackScrollLeft`);
-    }
+        // 6b. Restore the horizontal scroll position of the carousel (main.html)
+        const track = document.querySelector(".carousel-track-container");
+        const savedTrackScrollLeft = sessionStorage.getItem(pageKey + '_trackScrollLeft');
+        if (track && savedTrackScrollLeft !== null) {
+            track.scrollLeft = parseInt(savedTrackScrollLeft, 10);
+            sessionStorage.removeItem(pageKey + '_trackScrollLeft');
+        }
 
-    // 5c. Restore vertical page scroll position
-    const savedScrollY = sessionStorage.getItem(`${pageKey}_scrollY`);
-    if (savedScrollY !== null) {
-        setTimeout(function () {
-            window.scrollTo({
-                top: parseInt(savedScrollY, 10),
-                behavior: "instant"
-            });
-            sessionStorage.removeItem(`${pageKey}_scrollY`);
-        }, 50);
-    }
-});
+        // 6c. Restore vertical page scroll position
+        if ('scrollRestoration' in history) {
+            history.scrollRestoration = 'manual'; // Avoid the browser's default scroll restoration behavior
+        }
+
+        const savedScrollY = sessionStorage.getItem(pageKey + '_scrollY');
+        if (savedScrollY !== null) {
+            setTimeout(function () {
+                window.scrollTo(0, parseInt(savedScrollY, 10));
+                sessionStorage.removeItem(pageKey + '_scrollY');
+            }, 120);
+        }
+    });

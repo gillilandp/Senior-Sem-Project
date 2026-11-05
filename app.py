@@ -193,7 +193,23 @@ def home():
     except Exception as e:
         print(f"Error loading home recipes: {e}")
 
-    return render_template('main.html', recipes=recipes)
+    diet_info = {}
+    diet_ingredients = {}
+
+    info_path = os.path.join(app.static_folder, 'diet_info.json')
+    if os.path.exists(info_path):
+        with open(info_path, 'r', encoding='utf-8') as f:
+            diet_info = json.load(f)
+
+    ingredients_path = os.path.join(app.static_folder, 'diet_ingredients.json')
+    if os.path.exists(ingredients_path):
+        with open(ingredients_path, 'r', encoding='utf-8') as f:
+            diet_ingredients = json.load(f)
+
+    return render_template('main.html', 
+                           recipes=recipes, 
+                           diet_info= diet_info, 
+                           diet_ingredients=diet_ingredients)
 
 
 # 2. Processing Register
@@ -284,61 +300,85 @@ def search_recipes():
 
     conn = get_db_connection()
 
-    # 1) Dynamically generate SQL conditions by flexibly 
-    # combining multiple filters
+    # 1) Dynamically generate SQL conditions by flexibly combining multiple filters
     conditions = []
     params = []
 
+    # a) Add keyword search condition
     if keyword:
-        conditions.append("name LIKE ?")
-        params.append(f"%{keyword}%")
-
+        conditions.append("LOWER(name) LIKE ?")
+        params.append(f"%{keyword.lower()}%")
+    # b) Add category filter condition
     if category_filter:
-        conditions.append("category = ?")
-        params.append(category_filter)
-
+        conditions.append("LOWER(category) = ?")
+        params.append(category_filter.lower())
+    # c) Add diet filter condition
     if diet_filter and diet_filter.lower() != 'all':
-        conditions.append("dietary_tags LIKE ?")
-        params.append(f"%{diet_filter}%")
+        conditions.append("LOWER(dietary_tags) LIKE ?")
+        params.append(f"%{diet_filter.lower()}%")
 
     where_clause = " WHERE " + " AND ".join(conditions) if conditions else ""
 
-    # 2) Count the total number of records that match the criteria
-    count_query = f"SELECT COUNT(*) FROM recipe_cache{where_clause}"
-    total_count = conn.execute(count_query, params).fetchone()[0]
+    # d) Add prep or type filter condition, which will be applied after fetching the data
+    if prep_filter or type_filter:
+        data_query = f"SELECT raw_data, dietary_tags FROM recipe_cache{where_clause}"
+        rows = conn.execute(data_query, params).fetchall()
+        conn.close()
 
-    # 3) Retrieve a RANDOM list of dishes from SQLite (ORDER BY RANDOM())
-    data_query = f"SELECT raw_data, dietary_tags FROM recipe_cache{where_clause} ORDER BY RANDOM() LIMIT ? OFFSET ?"
-    rows = conn.execute(data_query, params + [fetch_limit + 1, offset]).fetchall()
-    conn.close()
+        filtered_meals = []
+        for row in rows:
+            meal = json.loads(row['raw_data'])
+            cook_label = get_cooking_label(meal.get('strInstructions', ''))
+            prep_label = get_prep_label(meal)
 
-    # 4) Read data and assign sub-labels
-    has_more = len(rows) > fetch_limit
-    display_rows = rows[:fetch_limit]
-    meals = []
+            # Filter by prep_filter (prep_label)
+            if prep_filter == 'minimal' and prep_label != 'Easy to prepare':
+                continue
+            if prep_filter == 'standard' and prep_label != 'Standard to prepare':
+                continue
+            if prep_filter == 'complex' and prep_label != 'Hard to prepare':
+                continue
 
-    for row in display_rows:
-        meal = json.loads(row['raw_data'])
-        cook_label = get_cooking_label(meal.get('strInstructions', ''))
-        prep_label = get_prep_label(meal)
+            # Filter by type_filter (cook_label)
+            if type_filter == 'quick' and cook_label != 'Quick and Easy':
+                continue
+            if type_filter == 'standard' and cook_label != 'Standard Cooking':
+                continue
+            if type_filter == 'detailed' and cook_label != 'Home cooked Special (Longer Recipe)':
+                continue
 
-        diet_tags_str = row['dietary_tags'] if 'dietary_tags' in row.keys() and row['dietary_tags'] else ''
-        meal['diet_labels'] = diet_tags_str.split(',') if diet_tags_str else []
+            meal['cook_label'] = cook_label
+            meal['prep_label'] = prep_label
+            filtered_meals.append(meal)
 
-        # Prep Filter
-        if prep_filter == 'minimal' and prep_label != 'Easy to prepare': continue
-        if prep_filter == 'standard' and prep_label != 'Standard to prepare': continue
-        if prep_filter == 'complex' and prep_label != 'Hard to prepare': continue
+        total_count = len(filtered_meals)
+        has_more = total_count > fetch_limit
+        meals = filtered_meals[:fetch_limit]
+    else:
+        # 2) Count the total number of records that match the criteria
+        count_query = f"SELECT COUNT(*) FROM recipe_cache{where_clause}"
+        total_count = conn.execute(count_query, params).fetchone()[0]
 
-        # Type Filter
-        if type_filter == 'quick' and cook_label != 'Quick and Easy': continue
-        if type_filter == 'standard' and cook_label != 'Standard Cooking': continue
-        if type_filter == 'detailed' and cook_label != 'Home cooked Special (Longer Recipe)': continue
+        # 3) Retrieve list of dishes from SQLite
+        data_query = f"SELECT raw_data, dietary_tags FROM recipe_cache{where_clause} LIMIT ? OFFSET ?"
+        rows = conn.execute(data_query, params + [fetch_limit + 1, offset]).fetchall()
+        conn.close()
 
-        meal['cook_label'] = cook_label
-        meal['prep_label'] = prep_label
-        meals.append(meal)
+        # 4) Read data and assign sub-labels
+        has_more = len(rows) > fetch_limit
+        display_rows = rows[:fetch_limit]
+        meals = []
 
+        for row in display_rows:
+            meal = json.loads(row['raw_data'])
+            cook_label = get_cooking_label(meal.get('strInstructions', ''))
+            prep_label = get_prep_label(meal)
+
+            meal['cook_label'] = cook_label
+            meal['prep_label'] = prep_label
+            meals.append(meal)
+
+    # Take a list of countries from the database to display in the filter dropdown
     countries = get_countries_from_db()
 
     return render_template(
@@ -607,25 +647,6 @@ def profile():
         ingredients_to_avoid=ingredients_to_avoid,
         dietary_notes=dietary_notes
     )
-
-@app.route('/diet-guide')
-def diet_guide():
-    diet_info = {}
-    diet_ingredients = {}
-
-    # Read the information of each diet
-    info_path = os.path.join(app.static_folder, 'diet_info.json')
-    if os.path.exists(info_path):
-        with open(info_path, 'r', encoding='utf-8') as f:
-            diet_info = json.load(f)
-
-    # Read list of ingredient
-    ingredients_path = os.path.join(app.static_folder, 'diet_ingredients.json')
-    if os.path.exists(ingredients_path):
-        with open(ingredients_path, 'r', encoding='utf-8') as f:
-            diet_ingredients = json.load(f)
-
-    return render_template('dietGuide.html', diet_info=diet_info, diet_ingredients=diet_ingredients)
 
 # Watch all ingredeient for each Diet Meals
 @app.route('/diet-ingredients/<diet_name>')

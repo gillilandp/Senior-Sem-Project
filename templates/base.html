@@ -21,7 +21,23 @@
             </a>
         </div>
         <nav class="nav-links">
-            <a href="/#how-it-works">How it Works</a>
+            <div class="dropdown">
+                <a href="/#profile-setup-section" class="dropdown-toggle">
+                    Diet Guides <span class="arrow-down">▾</span>
+                </a>
+                <div class="dropdown-menu">
+                    <div class="dropdown-header">DIETARY GUIDES</div>
+                    <a href="{{ url_for('search_recipes') }}?diet=Gluten-Free">🍚 Gluten-Free Guide</a>
+                    <a href="{{ url_for('search_recipes') }}?diet=Dairy-Free">🥛 Dairy-Free Guide</a>
+                    <a href="{{ url_for('search_recipes') }}?diet=Vegan">🥬 Vegan Guide</a>
+                    <a href="{{ url_for('search_recipes') }}?diet=Vegetarian">🥗 Vegetarian Guide</a>
+                    <a href="{{ url_for('search_recipes') }}?diet=Nut-Free">🌰 Nut-Free Guide</a>
+                    <a href="{{ url_for('search_recipes') }}?diet=Soy-Free">🫘 Soy-Free Guide</a>
+                    <a href="{{ url_for('search_recipes') }}?diet=Halal">🧆 Halal Guide</a>
+                    <a href="{{ url_for('search_recipes') }}?diet=Kosher">🥯 Kosher Guide</a>
+                    <a href="{{ url_for('search_recipes') }}?diet=Low-Sodium">🧂 Low-Sodium Guide</a>
+                </div>
+            </div>
             <!-- The list for Recipes and Brand -->
             <div class="dropdown">
                 <a href="/#recipes-section" class="dropdown-toggle">
@@ -34,26 +50,21 @@
                     </a>
                     <div class="dropdown-divider"></div>
 
-                    <!-- Group 1: Ingredient Preparation Scale -->
-                    <div class="dropdown-header">🥗 INGREDIENT PREPARE SCALE</div>
-                    <a href="{{ url_for('search_recipes') }}?prep=minimal">🥗 Minimal Ingredients (&lt; 6)</a>
-                    <a href="{{ url_for('search_recipes') }}?prep=standard">🥗 Standard Prep (6 - 11)</a>
-                    <a href="{{ url_for('search_recipes') }}?prep=complex">🥗 Complex Prep (&gt; 11)</a>
-
-                    <div class="dropdown-divider"></div>
-
-                    <!-- Group 2: Recipe Length & Difficulty -->
+                    <!-- Group 1: Recipe Length & Difficulty -->
                     <div class="dropdown-header">⏱️ RECIPE LENGTH & DIFFICULTY</div>
-                    <a href="{{ url_for('search_recipes') }}?type=quick">🚀 Quick and Easy</a>
-                    <a href="{{ url_for('search_recipes') }}?type=standard">🍳 Standard Recipe</a>
-                    <a href="{{ url_for('search_recipes') }}?type=detailed">🍲 Detailed Recipe</a>
+                    <a href="{{ url_for('search_recipes', type='quick') }}">🚀 Quick and Easy</a>
+                    <a href="{{ url_for('search_recipes', type='standard') }}">🍳 Standard Recipe</a>
+                    <a href="{{ url_for('search_recipes', type='detailed') }}">🍲 Detailed Recipe</a>
+
+                    <div class="dropdown-divider"></div>
+                    <!-- Group 2: Ingredient Preparation Scale -->
+                    <div class="dropdown-header">🥗 INGREDIENT PREPARE SCALE</div>
+                    <a href="{{ url_for('search_recipes', prep='minimal') }}">🥗 Minimal Ingredients (&lt; 6)</a>
+                    <a href="{{ url_for('search_recipes', prep='standard') }}">🥗 Standard Prep (6 - 11)</a>
+                    <a href="{{ url_for('search_recipes', prep='complex') }}">🥗 Complex Prep (&gt; 11)</a>
 
                     <div class="dropdown-divider"></div>
 
-                    <!-- Group 3: All of   -->
-                    <div class="dropdown-header"> EXPLORE ALL</div>
-                    <a href="{{ url_for('search_recipes') }}">📖 All Verified Recipes</a>
-                    <a href="{{ url_for('diet_guide') }}"> 🗒️ Diet Guide</a>
                 </div>
             </div>
             <a href="/#restaurants">Restaurant Finder</a>

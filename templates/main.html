@@ -36,9 +36,9 @@
 <section class="profile-setup-section">
     <div class="section-header">
         <span class="sub-caption">CUSTOM PROFILE SETUP</span>
-        <h2 class="section-title">Set your safe parameters once. We handle the rest.</h2>
-        <p class="section-subtitle">Select your dietary restrictions to see how SafePlate dynamically filters out
-            hazards and highlights appetizing alternatives.</p>
+        <h2 class="section-title">Explore Your Safe Dietary Guidelines</h2>
+        <p class="section-subtitle">Select a dietary restriction below to view safe foods, items to avoid, and verified
+            recipes tailored for you.</p>
     </div>
 
     <div class="filter-tags">
@@ -90,11 +90,11 @@
                     <div class="diet-card-actions">
                         {% if diet_ingredients and diet_ingredients.get(diet_key) %}
                         <a href="{{ url_for('diet_ingredients_detail', diet_name=diet_key) }}" class="link-ingredients">
-                            🔍 View full list of ingredients ({{ diet_ingredients[diet_key]|length }}) &rArr;
+                            🔍 View full list of ingredients ({{ diet_ingredients[diet_key]|length }}) &rarr;
                         </a>
                         {% endif %}
                         <a href="{{ url_for('search_recipes', diet=diet_key) }}" class="button-primary">
-                            Explore {{ diet_key }} Recipes &rArr;
+                            Explore {{ diet_key }} Recipes &rarr;
                         </a>
                     </div>
                 </div>
