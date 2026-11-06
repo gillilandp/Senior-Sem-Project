@@ -295,8 +295,8 @@ def search_recipes():
     page = int(request.args.get('page', 1))
     limit = 15
 
-    fetch_limit = page * limit
-    offset = 0
+    offset = (page - 1) * limit
+    fetch_limit = limit
 
     conn = get_db_connection()
 
@@ -361,12 +361,12 @@ def search_recipes():
 
         # 3) Retrieve list of dishes from SQLite
         data_query = f"SELECT raw_data, dietary_tags FROM recipe_cache{where_clause} LIMIT ? OFFSET ?"
-        rows = conn.execute(data_query, params + [fetch_limit + 1, offset]).fetchall()
+        rows = conn.execute(data_query, params + [limit + 1, offset]).fetchall()
         conn.close()
 
         # 4) Read data and assign sub-labels
-        has_more = len(rows) > fetch_limit
-        display_rows = rows[:fetch_limit]
+        has_more = len(rows) > limit
+        display_rows = rows[:limit]
         meals = []
 
         for row in display_rows:
