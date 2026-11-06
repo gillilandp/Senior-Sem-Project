@@ -61,7 +61,7 @@
             <div class="coverflow-track">
                 {% if diet_info %}
                 {% for diet_key, info in diet_info.items() %}
-                <div class="coverflow-card" data-diet-key="{{ diet_key }}">
+                <div class="coverflow-card" data-diet-key="{{ diet_key }}" data-dietkey="{{ diet_key }}">
                     <div class="diet-card-header">
                         <h3>{{ info.title }}</h3>
                         <span class="diet-icon">{{ info.icon }}</span>
@@ -90,11 +90,11 @@
                     <div class="diet-card-actions">
                         {% if diet_ingredients and diet_ingredients.get(diet_key) %}
                         <a href="{{ url_for('diet_ingredients_detail', diet_name=diet_key) }}" class="link-ingredients">
-                            🔍 View full list of ingredients ({{ diet_ingredients[diet_key]|length }}) &rArr;
+                            🔍 View full list of ingredients ({{ diet_ingredients[diet_key]|length }}) &rarr;
                         </a>
                         {% endif %}
                         <a href="{{ url_for('search_recipes', diet=diet_key) }}" class="button-primary">
-                            Explore {{ diet_key }} Recipes &rArr;
+                            Explore {{ diet_key }} Recipes &rarr;
                         </a>
                     </div>
                 </div>

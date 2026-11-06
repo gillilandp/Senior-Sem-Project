@@ -66,11 +66,13 @@ document.addEventListener("DOMContentLoaded", function () {
     const coverflowCards = document.querySelectorAll(".coverflow-card");
     const dietPrevButton = document.getElementById("dietPrevButton");
     const dietNextButton = document.getElementById("dietNextButton");
-    const dietFilterButtons = document.querySelectorAll(".profile-setup-section .diet-chip");
-
-    if (coverflowCards.length > 0) {
+    const dietFilterButtons = document.querySelectorAll(".profile-setup-section .diet-chip, .filter-tags .diet-chip, .diet-chip"); if (coverflowCards.length > 0) {
         let currentIndex = 0;
         const totalCards = coverflowCards.length;
+
+        function normalizeKey(str) {
+            return (str || "").toLowerCase().replace(/_/g, "-").trim();
+        }
 
         function updateCoverflow(index) {
 
@@ -95,9 +97,13 @@ document.addEventListener("DOMContentLoaded", function () {
             });
 
             // Synchronize the Active effect for the Diet Chip button
-            const currentDietKey = (coverflowCards[currentIndex].getAttribute("data-diet-key") || "").toLowerCase().trim();
+            const currentDietKey = normalizeKey(
+                coverflowCards[currentIndex].getAttribute("data-diet-key") ||
+                coverflowCards[currentIndex].getAttribute("data-dietkey")
+            );
+
             dietFilterButtons.forEach(button => {
-                const buttonDiet = (button.getAttribute("data-diet") || "").toLowerCase().trim();
+                const buttonDiet = normalizeKey(button.getAttribute("data-diet"));
                 if (buttonDiet === currentDietKey) {
                     button.classList.add("active");
                 } else {
@@ -122,7 +128,9 @@ document.addEventListener("DOMContentLoaded", function () {
         // Click directly on the tabs on either side to rotate to that tab
         coverflowCards.forEach((card, index) => {
             card.addEventListener("click", (e) => {
-                if (e.target.closest("a, button")) return;
+                if (e.target.closest("a, button") && card.classList.contains("active")) {
+                    return;
+                }
                 updateCoverflow(index);
             });
         });
@@ -131,11 +139,6 @@ document.addEventListener("DOMContentLoaded", function () {
         dietFilterButtons.forEach(button => {
             button.addEventListener("click", function () {
                 const selectedDiet = normalizeKey(this.getAttribute("data-diet"));
-
-                if (selectedDiet === "all") {
-                    updateCoverflow(0);
-                    return;
-                }
 
                 let targetIndex = -1;
                 coverflowCards.forEach((card, index) => {
@@ -153,6 +156,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
             });
         });
+
         updateCoverflow(0);
     }
     // 3) Back to Top Button

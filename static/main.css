@@ -2386,13 +2386,14 @@ button.button-back:active {
 
 .coverflow-container {
     width: 100%;
-    height: 520px;
+    height: 620px;
     perspective: 1200px;
     overflow: hidden;
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
+    perspective: none !important;
 }
 
 .coverflow-track {
@@ -2407,47 +2408,61 @@ button.button-back:active {
     top: 50%;
     left: 50%;
     width: 380px;
-    height: 460px;
-    background: #fff;
+    height: 480px;
+    background: #ffffff;
     border-radius: 20px;
     padding: 24px;
     border: 1px solid #edf2f7;
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
-    transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    transition: transform 0.4s ease, opacity 0.4s ease, box-shadow 0.3s ease;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     cursor: pointer;
     user-select: none;
+
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    backface-visibility: hidden;
+    will-change: transform;
 }
 
 /* Card States (Center, Flanks & Hidden) */
 .coverflow-card.active {
-    transform: translate(-50%, -50%) scale(1.02);
+    transform: translate(-50%, -50%) scale(1) !important;
+    /* Không dùng scale > 1 */
     z-index: 10;
-    opacity: 1;
-    filter: blur(0);
-    border: 2px solid var(--primary-orange);
-    box-shadow: 0 15px 35px rgba(229, 107, 66, 0.2);
+    opacity: 1 !important;
+    filter: none !important;
+    border: 2.5px solid var(--primary-orange);
+    box-shadow: 0 20px 40px rgba(229, 107, 66, 0.25);
 }
 
 .coverflow-card.prev-1 {
-    transform: translate(-125%, -50%) scale(0.88);
+    transform: translate(-125%, -50%) scale(0.85) !important;
     z-index: 5;
-    opacity: 0.55;
-    filter: blur(1px);
+    opacity: 0.1;
 }
 
 .coverflow-card.next-1 {
-    transform: translate(25%, -50%) scale(0.88);
+    transform: translate(25%, -50%) scale(0.85) !important;
     z-index: 5;
-    opacity: 0.55;
-    filter: blur(1px);
+    opacity: 0.1;
+}
+/* Disable all links & buttons within the side panels */
+.coverflow-card.prev-1 *,
+.coverflow-card.next-1 * {
+    pointer-events: none !important;
+}
+
+/* Re-enable full interactivity when the card is in the center  */
+.coverflow-card.active * {
+    pointer-events: auto !important;
 }
 
 .coverflow-card.hidden {
-    transform: translate(-50%, -50%) scale(0.6);
+    transform: translate(-50%, -50%) scale(0.5) !important;
     z-index: 0;
     opacity: 0;
     pointer-events: none;
