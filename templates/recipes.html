@@ -6,7 +6,7 @@
 <section class="recipes-search-hero">
     <div class="back-navigation">
         <button type="button" onclick="goBackToPreviousPage()" class="button-back">
-            ⬅ Go Back 
+            ⬅ Go Back
         </button>
     </div>
     <!-- Search Header -->
@@ -18,12 +18,11 @@
     </div>
 
     <!-- Main search bar -->
-    <form action="{{ url_for('search_recipes') }}" method="GET" class="search-bar-container">
+    <form action="{{ url_for('search_recipes') }}" method="GET" class="search-bar-container" id="recipeSearchForm">
         <div class="search-input-wrapper">
             <span class="search-icon">🔍</span>
             <input type="text" name="keyword" placeholder="Enter recipe name or ingredient (e.g., Chicken, Salad...)"
                 value="{{ request.args.get('keyword', '') }}">
-
 
             <a href="{{ url_for('search_recipes') }}" class="button-reset" title="Reset Filters">
                 <svg class="reset-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"

@@ -73,10 +73,18 @@
         </nav>
         <div class="auth-buttons">
             {% if current_user.is_authenticated %}
-            <span>Hello, {{ current_user.email }}</span>
-            <a href="{{ url_for('profile') }}" class="button-primary-small">My Profile</a>
-            <a href="/logout" class="button-primary-small">Logout</a>
-            {% else %}
+            <span class="user-greeting">
+                Hello,
+                {% if current_user.first_name %}
+                {{ current_user.first_name }} {{ current_user.last_name }}
+                {% else %}
+                {{ current_user.email.split('@')[0] }}
+                {% endif %}
+            </span>
+            <a href="{{ url_for('profile') }}" class="button-primary-small">Profile</a>
+            <a href="{{ url_for('logout') }}" class="button-primary-small">Logout</a>
+            {% endif %}
+            {% if not current_user.is_authenticated %}
             <a href="/login" class="button-primary-small">Sign In</a>
             <a href="/register" class="button-primary-small">Create Profile</a>
             {% endif %}

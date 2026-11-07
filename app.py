@@ -38,21 +38,25 @@ def init_db():
     """Create database tables if they do not exist."""
     conn = get_db_connection()
 
-    # Existing user table
+    # User table with first_name and last_name
     conn.execute('''
         CREATE TABLE IF NOT EXISTS user (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             email TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL
+            password TEXT NOT NULL,
+            first_name TEXT,
+            last_name TEXT
         )
     ''')
 
-    # Dietary profile table
+    # Dietary profile table with all fields
     conn.execute('''
         CREATE TABLE IF NOT EXISTS dietary_profile (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER UNIQUE NOT NULL,
             restrictions TEXT,
+            ingredients_to_avoid TEXT,
+            dietary_notes TEXT,
             FOREIGN KEY (user_id) REFERENCES user(id)
         )
     ''')
@@ -69,23 +73,27 @@ def init_db():
 
 # User Information Table in the Database
 class User(UserMixin):
-    def __init__(self, id, email, password):
+    def __init__(self, id, email, password, first_name='', last_name=''):
         self.id = id
         self.email = email
         self.password = password
+        self.first_name = first_name or ''
+        self.last_name = last_name or ''
 
 @login_manager.user_loader
 def load_user(user_id):
-  """Download a user by ID from the database using SQLite connection."""
-  conn = get_db_connection()
-  user = conn.execute('SELECT * FROM user WHERE id = ?', (int (user_id),)).fetchone()
-  conn.close()
-
-  if user:
-      return User(id=user['id'], 
-                  email=user['email'], 
-                  password=user['password'])
-  return None           
+    conn = get_db_connection()
+    user = conn.execute('SELECT * FROM user WHERE id = ?', (int(user_id),)).fetchone()
+    conn.close()
+    if user:
+        return User(
+            id=user['id'], 
+            email=user['email'], 
+            password=user['password'],
+            first_name=user['first_name'] if 'first_name' in user.keys() else '',
+            last_name=user['last_name'] if 'last_name' in user.keys() else ''
+        )
+    return None
 
 # Rank for recipes based on their tags
 def get_cooking_label(instructions_input):
@@ -144,7 +152,7 @@ def get_countries_from_db():
     """Retrieve a list of countries, including flag information, from the 'areas_cache' table in SQLite."""
     conn = get_db_connection()
     try:
-    # Take a list of all area have a meal, avoid country don't have meals
+        # Take a list of all area have a meal, avoid country don't have meals
         rows = conn.execute('SELECT * FROM available_countries_view').fetchall() 
     except Exception as e:
         print(f"Error executing view: {e}")
@@ -208,66 +216,71 @@ def home():
 
     return render_template('main.html', 
                            recipes=recipes, 
-                           diet_info= diet_info, 
+                           diet_info=diet_info, 
                            diet_ingredients=diet_ingredients)
 
 
 # 2. Processing Register
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-  if request.method == 'POST':
-    email = request.form.get('email')
-    password = request.form.get('password')
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        first_name = request.form.get('first_name', '').strip()
+        last_name = request.form.get('last_name', '').strip()
 
-    conn = get_db_connection()
+        conn = get_db_connection()
 
-    # Check if email already exists
-    user_exists = conn.execute(
-       'SELECT * FROM user WHERE email = ?', (email,)
-       ).fetchone()
-    if user_exists:
-      conn.close()
-      return 'Email this has already been used!'
+        # Check if email already exists
+        user_exists = conn.execute(
+            'SELECT * FROM user WHERE email = ?', (email,)
+        ).fetchone()
+        if user_exists:
+            conn.close()
+            return 'Email this has already been used!'
 
-    # Encrypt the password and save it to the database.
-    hashed_password = generate_password_hash(password, method='scrypt')
-    conn.execute(
-       'INSERT INTO user (email, password) VALUES (?, ?)', 
-                 (email, hashed_password))
-    conn.commit()
-    conn.close()
+        # Encrypt the password and save it to the database.
+        hashed_password = generate_password_hash(password, method='scrypt')
+        conn.execute(
+            'INSERT INTO user (email, password, first_name, last_name) VALUES (?, ?, ?, ?)', 
+            (email, hashed_password, first_name, last_name)
+        )
+        conn.commit()
+        conn.close()
 
-    return redirect(url_for('login'))
+        return redirect(url_for('login'))
 
-  return render_template('register.html')
+    return render_template('register.html')
 
 
 # 3. Processing Login
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-  if request.method == 'POST':
-    email = request.form.get('email')
-    password = request.form.get('password')
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
 
-    conn = get_db_connection()
-    user = conn.execute(
-       'SELECT * FROM user WHERE email = ?', (email,)
-       ).fetchone()
-    conn.close()
+        conn = get_db_connection()
+        user = conn.execute(
+            'SELECT * FROM user WHERE email = ?', (email,)
+        ).fetchone()
+        conn.close()
 
-    # Check users and password
-    if user and check_password_hash(user['password'], password):
-      user_obj = User(
-         id=user['id'], 
-         email=user['email'], 
-         password=user['password']
-         )
-      login_user(user_obj)
-      return redirect(url_for('home'))
-    else:
-      return 'Invalid email or password!'
+        # Check users and password
+        if user and check_password_hash(user['password'], password):
+            user_obj = User(
+                id=user['id'], 
+                email=user['email'], 
+                password=user['password'],
+                first_name=user['first_name'] if 'first_name' in user.keys() else '',
+                last_name=user['last_name'] if 'last_name' in user.keys() else ''
+            )
+            login_user(user_obj)
+            return redirect(url_for('home'))
+        else:
+            return 'Invalid email or password!'
 
-  return render_template('login.html')
+    return render_template('login.html')
 
 # 4. Forgot Password
 @app.route('/forgot-password', methods=['GET', 'POST'])
@@ -281,8 +294,8 @@ def forgot_password():
 @app.route('/logout')
 @login_required
 def logout():
-  logout_user()
-  return redirect(url_for('home'))
+    logout_user()
+    return redirect(url_for('home'))
 
 # TheMealDB API: https://www.themealdb.com/api.php
 @app.route('/recipes', methods=['GET'])
@@ -505,7 +518,6 @@ def recipes_by_flag():
             
         conn.close()
 
-        # 🌟 Đã sửa: dùng fetch_limit để kiểm tra và cắt dữ liệu cho nút Load More
         has_more = len(rows) > fetch_limit
         display_rows = rows[:fetch_limit]
 
@@ -519,7 +531,6 @@ def recipes_by_flag():
         print(f"Error fetching area meals from DB: {e}")
         has_more = False
         total_count = 0
-
 
     return render_template('recipesFlag.html', 
                            meals=meals, 
@@ -574,11 +585,12 @@ def profile():
         ).strip()
 
         # Update the user's personal information
-        conn.execute('''
-            UPDATE user
-            SET first_name = ?, last_name = ?
-            WHERE id = ?
-        ''', (first_name, last_name, current_user.id))
+        if first_name or last_name:
+            conn.execute('''
+                UPDATE user
+                SET first_name = ?, last_name = ?
+                WHERE id = ?
+            ''', (first_name, last_name, current_user.id))
 
         # Save or update dietary information
         conn.execute('''
@@ -631,24 +643,27 @@ def profile():
     dietary_notes = ''
 
     if saved_profile:
-        if saved_profile['restrictions']:
+        if 'restrictions' in saved_profile.keys() and saved_profile['restrictions']:
             selected_restrictions = saved_profile['restrictions'].split(',')
 
-        ingredients_to_avoid = saved_profile['ingredients_to_avoid'] or ''
-        dietary_notes = saved_profile['dietary_notes'] or ''
+        if 'ingredients_to_avoid' in saved_profile.keys():
+            ingredients_to_avoid = saved_profile['ingredients_to_avoid'] or ''
 
+        if 'dietary_notes' in saved_profile.keys():
+            dietary_notes = saved_profile['dietary_notes'] or ''
+            
     return render_template(
         'profile.html',
         restrictions_list=restrictions_list,
         selected_restrictions=selected_restrictions,
-        first_name=user['first_name'] if user else '',
-        last_name=user['last_name'] if user else '',
+        first_name=user['first_name'] if user and 'first_name' in user.keys() else '',
+        last_name=user['last_name'] if user and 'last_name' in user.keys() else '',
         email=user['email'] if user else '',
         ingredients_to_avoid=ingredients_to_avoid,
         dietary_notes=dietary_notes
     )
 
-# Watch all ingredeient for each Diet Meals
+# Watch all ingredient for each Diet Meals
 @app.route('/diet-ingredients/<diet_name>')
 def diet_ingredients_detail(diet_name):
     diet_ingredients = {}

@@ -207,25 +207,6 @@ document.addEventListener("DOMContentLoaded", function () {
         updateCoverflow(0);
     }
 
-    // Auto submit form on /recipes page when changing radio filters or dropdown
-    const recipeSearchForm = document.querySelector('.search-bar-container');
-    if (recipeSearchForm) {
-        const recipeRadios = recipeSearchForm.querySelectorAll('.diet-radio');
-        const categorySelect = recipeSearchForm.querySelector('.category-select');
-
-        recipeRadios.forEach(radio => {
-            radio.addEventListener('change', function () {
-                recipeSearchForm.submit();
-            });
-        });
-
-        if (categorySelect) {
-            categorySelect.addEventListener('change', function () {
-                recipeSearchForm.submit();
-            });
-        }
-    }
-
     // 3) Back to Top Button
     const backToTopButton = document.getElementById("backToTopButton");
     if (backToTopButton) {
@@ -341,7 +322,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 
-// 6) Restore State when clicking "GO BACK" and  Return to the previous page (recipes.html or main.html) 
+// 6) Restore State when clicking "GO BACK" and Return to the previous page (recipes.html or main.html) 
 window.addEventListener("pageshow", function (e) {
     if (e.persisted || (window.performance && window.performance.navigation.type === 2)) {
         const pageKey = window.location.pathname;
