@@ -340,9 +340,6 @@ document.addEventListener("DOMContentLoaded", function () {
                         matchInput.checked = false;
                     }
                 }
-
-                // Auto-submit the search form immediately when a filter is clicked
-                searchForm.submit();
             });
         });
     }
