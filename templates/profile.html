@@ -1,175 +1,157 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Profile - SafePlate</title>
+{% extends "base.html" %}
 
-    <style>    
-        /* Autocomplete dropdown */
-        .suggestions {
-            display: none;
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            margin-top: 5px;
-            max-height: 200px;
-            overflow-y: auto;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-        }
+{% block title %}My Profile - SafePlate{% endblock %}
 
-        .suggestion-item {
-            padding: 12px;
-            cursor: pointer;
-        }
+{% block content %}
+<style>
+    /* Autocomplete dropdown */
+    .suggestions {
+        display: none;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        margin-top: 5px;
+        max-height: 200px;
+        overflow-y: auto;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    }
 
-        .suggestion-item:hover,
-        .suggestion-item:focus {
-            background-color: #f3f6f1;
-            outline: 2px solid #315c3b;
-            outline-offset: -2px;
-        }
+    .suggestion-item {
+        padding: 12px;
+        cursor: pointer;
+    }
 
-        /* Selected restrictions */
-        .selected-restrictions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 15px;
-        }
+    .suggestion-item:hover,
+    .suggestion-item:focus {
+        background-color: #f3f6f1;
+        outline: 2px solid #315c3b;
+        outline-offset: -2px;
+    }
 
-        .selected-tag {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background-color: #e3f0e5;
-            color: #315c3b;
-            padding: 8px 12px;
-            border-radius: 20px;
-            font-size: 14px;
-        }
+    /* Selected restrictions */
+    .selected-restrictions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 15px;
+    }
 
-        /* Remove button */
-        .selected-tag .remove-restriction {
-            background: transparent;
-            border: none;
-            color: #315c3b;
-            font-size: 20px;
-            cursor: pointer;
-            width: auto;
-            margin: 0;
-            padding: 0 4px;
-        }
+    .selected-tag {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background-color: #e3f0e5;
+        color: #315c3b;
+        padding: 8px 12px;
+        border-radius: 20px;
+        font-size: 14px;
+    }
 
-        .selected-tag .remove-restriction:hover {
-            background: transparent;
-            color: #c0392b;
-        }
+    /* Remove button */
+    .selected-tag .remove-restriction {
+        background: transparent;
+        border: none;
+        color: #315c3b;
+        font-size: 20px;
+        cursor: pointer;
+        width: auto;
+        margin: 0;
+        padding: 0 4px;
+    }
 
-        #empty-message {
-            text-align: left;
-            color: #777;
-            font-size: 14px;
-        }
-    
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f8f9f5;
-            margin: 0;
-            padding: 40px 20px;
-        }
+    .selected-tag .remove-restriction:hover {
+        background: transparent;
+        color: #c0392b;
+    }
 
-        .profile-container {
-            max-width: 650px;
-            margin: auto;
-            background: white;
-            padding: 35px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
+    #empty-message {
+        text-align: left;
+        color: #777;
+        font-size: 14px;
+        margin-top: 8px;
+    }
 
-        h1 {
-            color: #315c3b;
-            text-align: center;
-        }
+    .profile-container {
+        max-width: 650px;
+        margin: 40px auto;
+        background: white;
+        padding: 35px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
 
-        h2 {
-            color: #315c3b;
-            margin-top: 30px;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 10px;
-        }
+    .profile-container h1 {
+        color: #315c3b;
+        text-align: center;
+        margin-top: 0;
+    }
 
-        p {
-            text-align: center;
-            color: #666;
-        }
+    .profile-container h2 {
+        color: #315c3b;
+        margin-top: 30px;
+        border-bottom: 2px solid #eee;
+        padding-bottom: 10px;
+    }
 
-        .form-group {
-            margin-bottom: 18px;
-        }
+    .profile-container p {
+        text-align: center;
+        color: #666;
+    }
 
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-        }
+    .form-group {
+        margin-bottom: 18px;
+    }
 
-        .form-group input,
-        .form-group textarea {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            box-sizing: border-box;
-        }
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: bold;
+    }
 
-        .restriction {
-            padding: 12px;
-            margin: 8px 0;
-            background: #f3f6f1;
-            border-radius: 8px;
-        }
+    .form-group input,
+    .form-group textarea {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        box-sizing: border-box;
+        font-family: inherit;
+    }
 
-        .restriction label {
-            cursor: pointer;
-        }
+    .profile-container button[type="submit"] {
+        width: 100%;
+        padding: 14px;
+        background-color: #315c3b;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        margin-top: 25px;
+    }
 
-        input[type="checkbox"] {
-            margin-right: 10px;
-        }
+    .profile-container button[type="submit"]:hover {
+        background-color: #24462c;
+    }
 
-        button {
-            width: 100%;
-            padding: 14px;
-            background-color: #315c3b;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-            margin-top: 20px;
-        }
+    .back-link {
+        display: block;
+        text-align: center;
+        margin-top: 20px;
+        color: #315c3b;
+        text-decoration: none;
+        font-weight: 500;
+    }
 
-        button:hover {
-            background-color: #24462c;
-        }
-
-        .back-link {
-            display: block;
-            text-align: center;
-            margin-top: 20px;
-            color: #315c3b;
-        }
-    </style>
-</head>
-
-<body>
+    .back-link:hover {
+        text-decoration: underline;
+    }
+</style>
 
 <div class="profile-container">
 
     <h1>My Profile</h1>
-
     <p>Manage your personal information and dietary preferences.</p>
 
     <form method="POST" action="{{ url_for('profile') }}">
@@ -178,102 +160,59 @@
 
         <div class="form-group">
             <label for="first_name">First Name</label>
-            <input
-                type="text"
-                id="first_name"
-                name="first_name"
-                value="{{ first_name | default('', true) }}"
-            >
+            <input type="text" id="first_name" name="first_name" value="{{ first_name | default('', true) }}"
+                placeholder="Enter your first name">
         </div>
 
         <div class="form-group">
             <label for="last_name">Last Name</label>
-            <input
-                type="text"
-                id="last_name"
-                name="last_name"
-                value="{{ last_name | default('', true) }}"
-            >
+            <input type="text" id="last_name" name="last_name" value="{{ last_name | default('', true) }}"
+                placeholder="Enter your last name">
         </div>
 
         <div class="form-group">
             <label for="email">Email Address</label>
-            <input
-                type="email"
-                id="email"
-                value="{{ email | default('', true) }}"
-                readonly
-            >
+            <input type="email" id="email" value="{{ email | default('', true) }}" readonly
+                style="background-color: #f5f5f5; cursor: not-allowed;">
         </div>
 
         <h2>Dietary Information</h2>
-
-        <p>Search and select your dietary restrictions.</p>
+        <p style="text-align: left;">Search and select your dietary restrictions.</p>
 
         <div class="form-group">
             <label for="restriction-search">Search Dietary Restrictions</label>
-
-            <input
-                type="search"
-                id="restriction-search"
-                placeholder="Start typing a dietary restriction..."
-                autocomplete="off"
-                aria-controls="suggestions"
-                aria-expanded="false"
-            >
-
+            <input type="search" id="restriction-search" placeholder="Start typing a dietary restriction..."
+                autocomplete="off" aria-controls="suggestions" aria-expanded="false">
             <div id="suggestions" class="suggestions" role="listbox"></div>
         </div>
 
         <h3>My Selected Restrictions</h3>
 
         <div id="selected-restrictions" class="selected-restrictions">
-
             {% for restriction in selected_restrictions %}
-                {% if restriction in restrictions_list %}
-                <div class="selected-tag">
-                    <span>{{ restriction }}</span>
-
-                    <button
-                        type="button"
-                        class="remove-restriction"
-                        data-value="{{ restriction }}"
-                        aria-label="Remove {{ restriction }}"
-                    >×</button>
-
-                    <input
-                        type="hidden"
-                        name="restrictions"
-                        value="{{ restriction }}"
-                    >
-                </div>
-                {% endif %}
+            {% if restriction in restrictions_list %}
+            <div class="selected-tag">
+                <span>{{ restriction }}</span>
+                <button type="button" class="remove-restriction" data-value="{{ restriction }}"
+                    aria-label="Remove {{ restriction }}">×</button>
+                <input type="hidden" name="restrictions" value="{{ restriction }}">
+            </div>
+            {% endif %}
             {% endfor %}
-
         </div>
 
         <p id="empty-message">No dietary restrictions selected.</p>
 
-</div>
-
-        <div class="form-group">
+        <div class="form-group" style="margin-top: 20px;">
             <label for="ingredients_to_avoid">Ingredients to Avoid</label>
-            <textarea
-                id="ingredients_to_avoid"
-                name="ingredients_to_avoid"
-                rows="3"
-                placeholder="Example: Peanuts, sesame, artificial sweeteners"
-            >{{ ingredients_to_avoid | default('', true) }}</textarea>
+            <textarea id="ingredients_to_avoid" name="ingredients_to_avoid" rows="3"
+                placeholder="Example: Peanuts, sesame, artificial sweeteners">{{ ingredients_to_avoid | default('', true) }}</textarea>
         </div>
 
         <div class="form-group">
             <label for="dietary_notes">Additional Dietary Notes</label>
-            <textarea
-                id="dietary_notes"
-                name="dietary_notes"
-                rows="3"
-                placeholder="Enter any additional dietary information"
-            >{{ dietary_notes | default('', true) }}</textarea>
+            <textarea id="dietary_notes" name="dietary_notes" rows="3"
+                placeholder="Enter any additional dietary information">{{ dietary_notes | default('', true) }}</textarea>
         </div>
 
         <button type="submit">Save Changes</button>
@@ -281,15 +220,16 @@
     </form>
 
     <a href="{{ url_for('home') }}" class="back-link">
-        Back to Home
+        ← Back to Home
     </a>
 
 </div>
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {
 
         // Get available restrictions from Flask
-        const restrictions = {{ restrictions_list | tojson }};
+        const restrictions = JSON.parse('{{ restrictions_list | tojson | safe }}');
 
         const searchInput = document.getElementById("restriction-search");
         const suggestions = document.getElementById("suggestions");
@@ -303,35 +243,23 @@
             ).map(input => input.value)
         );
 
-        // Show message when no restrictions are selected
         function updateEmptyMessage() {
-            emptyMessage.style.display =
-                selected.size === 0 ? "block" : "none";
+            emptyMessage.style.display = selected.size === 0 ? "block" : "none";
         }
 
-        // Hide the suggestions dropdown
         function hideSuggestions() {
             suggestions.style.display = "none";
             suggestions.innerHTML = "";
             searchInput.setAttribute("aria-expanded", "false");
         }
 
-        // Show matching restrictions as the user types
         function showSuggestions() {
-
             const query = searchInput.value.toLowerCase().trim();
-
             suggestions.innerHTML = "";
 
-            if (query === "") {
-                hideSuggestions();
-                return;
-            }
-
-            const matches = restrictions.filter(restriction =>
-                restriction.toLowerCase().includes(query) &&
-                !selected.has(restriction)
-            );
+            const matches = query === ""
+                ? restrictions.filter(restriction => !selected.has(restriction))
+                : restrictions.filter(restriction => restriction.toLowerCase().includes(query) && !selected.has(restriction));
 
             if (matches.length === 0) {
                 hideSuggestions();
@@ -339,20 +267,16 @@
             }
 
             matches.forEach(restriction => {
-
                 const item = document.createElement("div");
-
                 item.className = "suggestion-item";
                 item.textContent = restriction;
                 item.setAttribute("role", "option");
                 item.setAttribute("tabindex", "0");
 
-                // Add restriction when clicked
                 item.addEventListener("click", () => {
                     addRestriction(restriction);
                 });
 
-                // Allow keyboard selection
                 item.addEventListener("keydown", (event) => {
                     if (event.key === "Enter" || event.key === " ") {
                         event.preventDefault();
@@ -368,12 +292,8 @@
             searchInput.setAttribute("aria-expanded", "true");
         }
 
-        // Add a restriction to the selected list
         function addRestriction(restriction) {
-
-            if (selected.has(restriction)) {
-                return;
-            }
+            if (selected.has(restriction)) return;
 
             selected.add(restriction);
 
@@ -386,12 +306,9 @@
             const removeButton = document.createElement("button");
             removeButton.type = "button";
             removeButton.className = "remove-restriction";
-            removeButton.textContent = "×";
+            removeButton.textContent = "x";
             removeButton.dataset.value = restriction;
-            removeButton.setAttribute(
-                "aria-label",
-                "Remove " + restriction
-            );
+            removeButton.setAttribute("aria-label", "Remove " + restriction);
 
             const hiddenInput = document.createElement("input");
             hiddenInput.type = "hidden";
@@ -409,17 +326,11 @@
             updateEmptyMessage();
         }
 
-        // Remove a selected restriction
         selectedContainer.addEventListener("click", function (event) {
-
             const button = event.target.closest(".remove-restriction");
-
-            if (!button) {
-                return;
-            }
+            if (!button) return;
 
             const restriction = button.dataset.value;
-
             selected.delete(restriction);
             button.closest(".selected-tag").remove();
 
@@ -427,15 +338,11 @@
             showSuggestions();
         });
 
-        // Update suggestions while typing
         searchInput.addEventListener("input", showSuggestions);
+        searchInput.addEventListener("focus", showSuggestions);
 
-        // Close dropdown when clicking outside
         document.addEventListener("click", function (event) {
-
-            if (!searchInput.contains(event.target) &&
-                !suggestions.contains(event.target)) {
-
+            if (!searchInput.contains(event.target) && !suggestions.contains(event.target)) {
                 hideSuggestions();
             }
         });
@@ -444,6 +351,4 @@
 
     });
 </script>
-
-</body>
-</html>
+{% endblock %}

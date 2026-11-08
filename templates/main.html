@@ -15,8 +15,10 @@
             you.
         </p>
         <div class="hero-actions">
-            <a href="{{ url_for('profile') }}" class="btn-primary">Build Your Free Profile &rarr;</a>
-            <a href="#" class="btn-secondary">See How We Verify</a>
+            <a href="{{ url_for('profile') }}" class="button-primary">Build Your Free Profile &rarr;</a>
+            <a href="{{ url_for('search_recipes', match_profile='true') }}" class="button-secondary">
+                ✨ View Matched Recipes &rarr;
+            </a>
         </div>
         <div class="social-proof">
             <div class="avatar-group">
@@ -28,48 +30,82 @@
         </div>
     </div>
     <div class="hero-image">
-        <img src="https://via.placeholder.com/500x400" alt="Healthy Food Bowl">
+        <img src="{{ url_for('static', filename='BalancedDiet.png') }}" alt="Healthy Food Bowl">
     </div>
 </section>
 
-<!-- 2.Custom Profile Setup Section -->
-<section class="profile-setup-section">
+<!-- 2. Diet Guide Section -->
+<section class="profile-setup-section" id="profile-setup-section">
     <div class="section-header">
-        <span class="sub-caption">CUSTOM PROFILE SETUP</span>
-        <h2 class="section-title">Set your safe parameters once. We handle the rest.</h2>
-        <p class="section-subtitle">Select your dietary restrictions to see how SafePlate dynamically filters out
-            hazards and highlights appetizing alternatives.</p>
+        <span class="sub-caption">DIET GUIDE</span>
+        <h2 class="section-title">Explore Your Safe Dietary Guidelines</h2>
+        <p class="section-subtitle">Select a dietary restriction below to view safe foods, items to avoid, and verified
+            recipes tailored for you.</p>
     </div>
 
     <div class="filter-tags">
-        <button type="button" class="diet-chip active">🌿 All </button>
-        <button type="button" class="diet-chip"> 🍚Gluten-Free</button>
-        <button type="button" class="diet-chip"> 🥛Dairy-free</button>
-        <button type="button" class="diet-chip"> 🥬Vegan</button>
-        <button type="button" class="diet-chip"> 🥗Vegetarian</button>
-        <button type="button" class="diet-chip"> 🌰Nut-Free</button>
-        <button type="button" class="diet-chip"> 🌽Soy-Free</button>
-        <button type="button" class="diet-chip"> 🧆Halal</button>
-        <button type="button" class="diet-chip"> 🥯Kosher</button>
-        <button type="button" class="diet-chip"> 🧂Low-Sodium</button>
+        <button type="button" class="diet-chip" data-diet="Gluten-Free">🍚 Gluten-Free</button>
+        <button type="button" class="diet-chip" data-diet="Dairy-Free">🥛 Dairy-free</button>
+        <button type="button" class="diet-chip" data-diet="Vegan">🥬 Vegan</button>
+        <button type="button" class="diet-chip" data-diet="Vegetarian">🥗 Vegetarian</button>
+        <button type="button" class="diet-chip" data-diet="Nut-Free">🌰 Nut-Free</button>
+        <button type="button" class="diet-chip" data-diet="Soy-Free">🫘 Soy-Free</button>
+        <button type="button" class="diet-chip" data-diet="Halal">🧆 Halal</button>
+        <button type="button" class="diet-chip" data-diet="Kosher">🥯 Kosher</button>
+        <button type="button" class="diet-chip" data-diet="Low-Sodium">🧂 Low-Sodium</button>
     </div>
 
-    <div class="recipe-card-preview">
-        <div class="recipe-image">
-            <img src="https://via.placeholder.com/120x100" alt="Salmon Dish">
-        </div>
-        <div class="recipe-info">
-            <div class="recipe-badges">
-                <span class="badge">GLUTEN-FREE VERIFIED</span>
-                <span class="badge">DAIRY-FREE SAFE</span>
+    <div class="coverflow-carousel-wrapper">
+        <button type="button" id="dietPrevButton" class="coverflow-arrow prev">&#10094;</button>
+
+        <!--  Carousel 3D -->
+        <div class="coverflow-container">
+            <div class="coverflow-track">
+                {% if diet_info %}
+                {% for diet_key, info in diet_info.items() %}
+                <div class="coverflow-card" data-diet-key="{{ diet_key }}" data-dietkey="{{ diet_key }}">
+                    <div class="diet-card-header">
+                        <h3>{{ info.title }}</h3>
+                        <span class="diet-icon">{{ info.icon }}</span>
+                    </div>
+
+                    <p class="diet-for-who"><strong>WHO:</strong> {{ info.for_who }}</p>
+
+                    <div class="diet-food-list safe">
+                        <span class="list-title">✅ Safe Foods & Ingredients:</span>
+                        <ul>
+                            {% for food in info.safe_foods %}
+                            <li>{{ food }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
+                    <div class="diet-food-list avoid">
+                        <span class="list-title">❌ Foods & Ingredients to Avoid:</span>
+                        <ul>
+                            {% for food in info.avoid_foods %}
+                            <li>{{ food }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
+                    <div class="diet-card-actions">
+                        {% if diet_ingredients and diet_ingredients.get(diet_key) %}
+                        <a href="{{ url_for('diet_ingredients_detail', diet_name=diet_key) }}" class="link-ingredients">
+                            🔍 View full list of ingredients ({{ diet_ingredients[diet_key]|length }}) &rarr;
+                        </a>
+                        {% endif %}
+                        <a href="{{ url_for('search_recipes', diet=diet_key) }}" class="button-primary">
+                            Explore {{ diet_key }} Recipes &rarr;
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+                {% endif %}
             </div>
-            <h3 class="recipe-title">Citrus Pan-Seared Salmon with Herb Quinoa</h3>
-            <p class="recipe-desc">This nutritious meal perfectly satisfies both of your active restrictions, using
-                certified allergen-free quinoa and wild-caught salmon.</p>
         </div>
-        <div class="recipe-status">
-            <span class="status-pill">100% Safe Choice</span>
-        </div>
+
+        <button type="button" id="dietNextButton" class="coverflow-arrow next">&#10095;</button>
     </div>
 </section>
 
@@ -123,7 +159,7 @@
         <p class="section-subtitle">
             Your kitchen should be a place of culinary discovery, not stress.</p>
         <div class="header-action" style="margin-top: 16px; text-align: center;">
-            <a href="{{ url_for('search_recipes') }}" class="btn-primary">
+            <a href="{{ url_for('search_recipes') }}" class="button-primary">
                 See All Recipes &rarr;
             </a>
         </div>
@@ -133,7 +169,7 @@
     <!-- Carousel for recipes -->
     <div class="carousel-wrapper">
 
-        <button class="carousel-arrow" id="prevBtn">&#10094;</button>
+        <button class="carousel-arrow" id="prevButton">&#10094;</button>
 
         <div class="carousel-track-container" id="carouselTrack">
             <div class="recipes-grid">
@@ -172,13 +208,13 @@
                     <div class="see-all-content">
                         <h3>Ready for More?</h3>
                         <p>Explore our full collection of safe & verified recipes.</p>
-                        <a href="/recipes" class="btn-primary">See All Recipes &rarr;</a>
+                        <a href="/recipes" class="button-primary">See All Recipes &rarr;</a>
                     </div>
                 </div>
             </div>
         </div>
 
-        <button class="carousel-arrow" id="nextBtn">&#10095;</button>
+        <button class="carousel-arrow" id="nextButton">&#10095;</button>
     </div>
 </section>
 

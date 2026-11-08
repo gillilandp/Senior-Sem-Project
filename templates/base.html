@@ -21,11 +21,27 @@
             </a>
         </div>
         <nav class="nav-links">
-            <a href="/#how-it-works">How it Works</a>
+            <div class="dropdown">
+                <a href="{{ url_for('home') }}#profile-setup-section" class="dropdown-toggle">
+                    Diet Guides <span class="arrow-down">&#9662;</span>
+                </a>
+                <div class="dropdown-menu">
+                    <div class="dropdown-header">DIETARY GUIDES</div>
+                    <a href="{{ url_for('search_recipes') }}?diet=Gluten-Free">🍚 Gluten-Free Guide</a>
+                    <a href="{{ url_for('search_recipes') }}?diet=Dairy-Free">🥛 Dairy-Free Guide</a>
+                    <a href="{{ url_for('search_recipes') }}?diet=Vegan">🥬 Vegan Guide</a>
+                    <a href="{{ url_for('search_recipes') }}?diet=Vegetarian">🥗 Vegetarian Guide</a>
+                    <a href="{{ url_for('search_recipes') }}?diet=Nut-Free">🌰 Nut-Free Guide</a>
+                    <a href="{{ url_for('search_recipes') }}?diet=Soy-Free">🫘 Soy-Free Guide</a>
+                    <a href="{{ url_for('search_recipes') }}?diet=Halal">🧆 Halal Guide</a>
+                    <a href="{{ url_for('search_recipes') }}?diet=Kosher">🥯 Kosher Guide</a>
+                    <a href="{{ url_for('search_recipes') }}?diet=Low-Sodium">🧂 Low-Sodium Guide</a>
+                </div>
+            </div>
             <!-- The list for Recipes and Brand -->
             <div class="dropdown">
                 <a href="/#recipes-section" class="dropdown-toggle">
-                    Recipes & Brands <span class="arrow-down">▾</span>
+                    Recipes & Brands <span class="arrow-down">&#9662;</span>
                 </a>
                 <div class="dropdown-menu">
                     <div class="dropdown-header">QUICK ACCESS</div>
@@ -34,42 +50,45 @@
                     </a>
                     <div class="dropdown-divider"></div>
 
-                    <!-- Group 1: Ingredient Preparation Scale -->
-                    <div class="dropdown-header">🥗 INGREDIENT PREPARE SCALE</div>
-                    <a href="{{ url_for('search_recipes') }}?prep=minimal">🥗 Minimal Ingredients (&lt; 6)</a>
-                    <a href="{{ url_for('search_recipes') }}?prep=standard">🥗 Standard Prep (6 - 11)</a>
-                    <a href="{{ url_for('search_recipes') }}?prep=complex">🥗 Complex Prep (&gt; 11)</a>
-
-                    <div class="dropdown-divider"></div>
-
-                    <!-- Group 2: Recipe Length & Difficulty -->
+                    <!-- Group 1: Recipe Length & Difficulty -->
                     <div class="dropdown-header">⏱️ RECIPE LENGTH & DIFFICULTY</div>
-                    <a href="{{ url_for('search_recipes') }}?type=quick">🚀 Quick and Easy</a>
-                    <a href="{{ url_for('search_recipes') }}?type=standard">🍳 Standard Recipe</a>
-                    <a href="{{ url_for('search_recipes') }}?type=detailed">🍲 Detailed Recipe</a>
+                    <a href="{{ url_for('search_recipes', type='quick') }}">🚀 Quick and Easy</a>
+                    <a href="{{ url_for('search_recipes', type='standard') }}">🍳 Standard Recipe</a>
+                    <a href="{{ url_for('search_recipes', type='detailed') }}">🍲 Detailed Recipe</a>
+
+                    <div class="dropdown-divider"></div>
+                    <!-- Group 2: Ingredient Preparation Scale -->
+                    <div class="dropdown-header">🥗 INGREDIENT PREPARE SCALE</div>
+                    <a href="{{ url_for('search_recipes', prep='minimal') }}">🥗 Minimal Ingredients (&lt; 6)</a>
+                    <a href="{{ url_for('search_recipes', prep='standard') }}">🥗 Standard Prep (6 - 11)</a>
+                    <a href="{{ url_for('search_recipes', prep='complex') }}">🥗 Complex Prep (&gt; 11)</a>
 
                     <div class="dropdown-divider"></div>
 
-                    <!-- Group 3: All of   -->
-                    <div class="dropdown-header"> EXPLORE ALL</div>
-                    <a href="{{ url_for('search_recipes') }}">📖 All Verified Recipes</a>
-                    <a href="{{ url_for('diet_guide') }}"> 🗒️ Diet Guide</a>
                 </div>
             </div>
             <a href="/#restaurants">Restaurant Finder</a>
             <a href="/#safety">Our Safety Standard</a>
             <a href="/#faq">FAQ</a>
         </nav>
-       <div class="auth-buttons">
-    {% if current_user.is_authenticated %}
-        <span>Hello, {{ current_user.email }}</span>
-        <a href="{{ url_for('profile') }}" class="btn-primary-small">My Profile</a>
-        <a href="/logout" class="btn-primary-small">Logout</a>
-    {% else %}
-        <a href="/login" class="btn-primary-small">Sign In</a>
-        <a href="/register" class="btn-primary-small">Create Profile</a>
-    {% endif %}
-</div>
+        <div class="auth-buttons">
+            {% if current_user.is_authenticated %}
+            <span class="user-greeting">
+                Hello,
+                {% if current_user.first_name %}
+                {{ current_user.first_name }} {{ current_user.last_name }}
+                {% else %}
+                {{ current_user.email.split('@')[0] }}
+                {% endif %}
+            </span>
+            <a href="{{ url_for('profile') }}" class="button-primary-small">Profile</a>
+            <a href="{{ url_for('logout') }}" class="button-primary-small">Logout</a>
+            {% endif %}
+            {% if not current_user.is_authenticated %}
+            <a href="/login" class="button-primary-small">Sign In</a>
+            <a href="/register" class="button-primary-small">Create Profile</a>
+            {% endif %}
+        </div>
     </header>
 
     <main>
@@ -84,8 +103,8 @@
             <p class="cta-subtitle">Build your custom safe dietary profile today and unlock hundreds of dietitian-vetted
                 recipes, grocery lists, and safe local tables.</p>
             <div class="cta-buttons">
-                <a href="{{ url_for('profile') }}" class="btn-primary">Build Free Profile &rarr;</a>
-                <a href="#" class="btn-outline">Speak to a Wellness Specialist</a>
+                <a href="{{ url_for('profile') }}" class="button-primary">Build Free Profile &rarr;</a>
+                <a href="#" class="button-outline">Speak to a Wellness Specialist</a>
             </div>
         </div>
     </section>
@@ -156,7 +175,7 @@
     </footer>
 
     <!-- Back to Top Button -->
-    <button id="backToTopBtn" title="Go to top">↑</button>
+    <button id="backToTopButton" title="Go to top">↑</button>
     <script src="{{ url_for('static', filename='main.js') }}"></script>
 </body>
 

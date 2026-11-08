@@ -4,9 +4,8 @@
 
 {% block content %}
 <section class="recipes-search-hero">
-    <!-- Back to Home Link -->
     <div class="back-navigation">
-        <button type="button" onclick="history.back()" class="btn-back">
+        <button type="button" onclick="goBackToPreviousPage()" class="button-back">
             ⬅ Go Back
         </button>
     </div>
@@ -14,71 +13,134 @@
     <div class="search-header">
         <span class="sub-caption">SAFETY-FIRST RECIPE ENGINE</span>
         <h1 class="section-title">Find the recipes that are safe for you.</h1>
-        <p class="section-subtitle">Filter recipes by keyword, dietary preferences, and allergen-free ingredients.</p>
+        <p class="section-subtitle">Filter recipes by keyword, dietary preferences, and allergen-free ingredients.
+        </p>
     </div>
 
     <!-- Main search bar -->
-    <form action="{{ url_for('search_recipes') }}" method="GET" class="search-bar-container">
+    <form action="{{ url_for('search_recipes') }}" method="GET" class="search-bar-container" id="recipeSearchForm">
         <div class="search-input-wrapper">
             <span class="search-icon">🔍</span>
             <input type="text" name="keyword" placeholder="Enter recipe name or ingredient (e.g., Chicken, Salad...)"
                 value="{{ request.args.get('keyword', '') }}">
-            <button type="submit" class="btn-primary">Search</button>
-        </div>
 
+            <a href="{{ url_for('search_recipes') }}" class="button-reset" title="Reset Filters">
+                <svg class="reset-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+                </svg>
+                <span>Reset</span>
+            </a>
+
+            <button type="submit" class="button-primary">Search</button>
+        </div>
         <!-- Dietary Filters -->
         <div class="quick-diet-filters">
             <span class="filter-label">Quick Filter:</span>
 
-            <a href="{{ url_for('search_recipes') }}"
-                class="diet-chip {% if not selected_diet or selected_diet == 'all' %}active{% endif %}">
-                🌿 All
-            </a>
+            {% set match_profile = request.args.get('match_profile', 'false') %}
 
-            <a href="{{ url_for('search_recipes', diet='Gluten-Free', keyword=request.args.get('keyword', '')) }}"
-                class="diet-chip {% if selected_diet == 'Gluten-Free' %}active{% endif %}">
-                🍚 Gluten-Free
-            </a>
+            {% if current_user.is_authenticated %}
+            <!-- Match Profile Filter -->
+            <label class="diet-chip-label">
+                <input type="checkbox" name="match_profile" value="true" {% if match_profile=='true' %}checked{% endif
+                    %} class="diet-checkbox">
+                <span class="diet-chip"> Matched My Profile</span>
+            </label>
+            {% endif %}
+            <label class="diet-chip-label">
+                <input type="checkbox" name="diet" value="all" {% if (not selected_diets) and match_profile !='true'
+                    %}checked{% endif %} class="diet-checkbox">
+                <span class="diet-chip">🌿 All</span>
+            </label>
 
-            <a href="{{ url_for('search_recipes', diet='Dairy-Free', keyword=request.args.get('keyword', '')) }}"
-                class="diet-chip {% if selected_diet == 'Dairy-Free' %}active{% endif %}">
-                🥛 Dairy-free
-            </a>
+            <label class="diet-chip-label">
+                <input type="checkbox" name="diet" value="Gluten-Free" {% if 'Gluten-Free' in selected_diets %}checked{%
+                    endif %} class="diet-checkbox">
+                <span class="diet-chip">🍚 Gluten-Free</span>
+            </label>
 
-            <a href="{{ url_for('search_recipes', diet='Vegan', keyword=request.args.get('keyword', '')) }}"
-                class="diet-chip {% if selected_diet == 'Vegan' %}active{% endif %}">
-                🥬 Vegan
-            </a>
+            <label class="diet-chip-label">
+                <input type="checkbox" name="diet" value="Dairy-Free" {% if 'Dairy-Free' in selected_diets %}checked{%
+                    endif %} class="diet-checkbox">
+                <span class="diet-chip">🥛 Dairy-free</span>
+            </label>
 
-            <a href="{{ url_for('search_recipes', diet='Vegetarian', keyword=request.args.get('keyword', '')) }}"
-                class="diet-chip {% if selected_diet == 'Vegetarian' %}active{% endif %}">
-                🥗 Vegetarian
-            </a>
+            <label class="diet-chip-label">
+                <input type="checkbox" name="diet" value="Vegan" {% if 'Vegan' in selected_diets %}checked{% endif %}
+                    class="diet-checkbox">
+                <span class="diet-chip">🥬 Vegan</span>
+            </label>
 
-            <a href="{{ url_for('search_recipes', diet='Nut-Free', keyword=request.args.get('keyword', '')) }}"
-                class="diet-chip {% if selected_diet == 'Nut-Free' %}active{% endif %}">
-                🌰 Nut-Free
-            </a>
+            <label class="diet-chip-label">
+                <input type="checkbox" name="diet" value="Vegetarian" {% if 'Vegetarian' in selected_diets %}checked{%
+                    endif %} class="diet-checkbox">
+                <span class="diet-chip">🥗 Vegetarian</span>
+            </label>
 
-            <a href="{{ url_for('search_recipes', diet='Soy-Free', keyword=request.args.get('keyword', '')) }}"
-                class="diet-chip {% if selected_diet == 'Soy-Free' %}active{% endif %}">
-                Soy-Free
-            </a>
+            <label class="diet-chip-label">
+                <input type="checkbox" name="diet" value="Nut-Free" {% if 'Nut-Free' in selected_diets %}checked{% endif
+                    %} class="diet-checkbox">
+                <span class="diet-chip">🌰 Nut-Free</span>
+            </label>
 
-            <a href="{{ url_for('search_recipes', diet='Halal', keyword=request.args.get('keyword', '')) }}"
-                class="diet-chip {% if selected_diet == 'Halal' %}active{% endif %}">
-                🧆 Halal
-            </a>
+            <label class="diet-chip-label">
+                <input type="checkbox" name="diet" value="Soy-Free" {% if 'Soy-Free' in selected_diets %}checked{% endif
+                    %} class="diet-checkbox">
+                <span class="diet-chip">🫘 Soy-Free</span>
+            </label>
 
-            <a href="{{ url_for('search_recipes', diet='Kosher', keyword=request.args.get('keyword', '')) }}"
-                class="diet-chip {% if selected_diet == 'Kosher' %}active{% endif %}">
-                🥯 Kosher
-            </a>
+            <label class="diet-chip-label">
+                <input type="checkbox" name="diet" value="Halal" {% if 'Halal' in selected_diets %}checked{% endif %}
+                    class="diet-checkbox">
+                <span class="diet-chip">🧆 Halal</span>
+            </label>
 
-            <a href="{{ url_for('search_recipes', diet='Low-Sodium', keyword=request.args.get('keyword', '')) }}"
-                class="diet-chip {% if selected_diet == 'Low-Sodium' %}active{% endif %}">
-                🧂 Low-Sodium
-            </a>
+            <label class="diet-chip-label">
+                <input type="checkbox" name="diet" value="Kosher" {% if 'Kosher' in selected_diets %}checked{% endif %}
+                    class="diet-checkbox">
+                <span class="diet-chip">🥯 Kosher</span>
+            </label>
+
+            <label class="diet-chip-label">
+                <input type="checkbox" name="diet" value="Low-Sodium" {% if 'Low-Sodium' in selected_diets %}checked{%
+                    endif %} class="diet-checkbox">
+                <span class="diet-chip">🧂 Low-Sodium</span>
+            </label>
+            <!-- Category and Meal Type Dropdown -->
+            <select name="category" class="category-select"
+                style="padding: 10px 14px; border-radius: 8px; border: 1px solid #cbd5e0; background-color: #fff; font-weight: 500; font-size: 0.95rem; cursor: pointer; color: #2d3748;">
+                <option value="" {% if not request.args.get('category') %}selected{% endif %}>All Categories
+                </option>
+                <option value="Beef" {% if request.args.get('category')=='Beef' %}selected{% endif %}>🥩 Beef
+                </option>
+                <option value="Chicken" {% if request.args.get('category')=='Chicken' %}selected{% endif %}>🍗
+                    Chicken
+                </option>
+                <option value="Dessert" {% if request.args.get('category')=='Dessert' %}selected{% endif %}>🍰
+                    Dessert
+                </option>
+                <option value="Lamb" {% if request.args.get('category')=='Lamb' %}selected{% endif %}>🐑 Lamb
+                </option>
+                <option value="Miscellaneous" {% if request.args.get('category')=='Miscellaneous' %}selected{% endif %}>
+                    🍱 Miscellaneous</option>
+                <option value="Pasta" {% if request.args.get('category')=='Pasta' %}selected{% endif %}>🍝 Pasta
+                </option>
+                <option value="Pork" {% if request.args.get('category')=='Pork' %}selected{% endif %}>🍖 Pork
+                </option>
+                <option value="Seafood" {% if request.args.get('category')=='Seafood' %}selected{% endif %}>🐟
+                    Seafood
+                </option>
+                <option value="Side" {% if request.args.get('category')=='Side' %}selected{% endif %}>🥐 Side
+                </option>
+                <option value="Starter" {% if request.args.get('category')=='Starter' %}selected{% endif %}>🥣
+                    Starter
+                </option>
+                <option value="Breakfast" {% if request.args.get('category')=='Breakfast' %}selected{% endif %}>🍳
+                    Breakfast</option>
+                <option value="Goat" {% if request.args.get('category')=='Goat' %}selected{% endif %}>🐐 Goat
+                </option>
+            </select>
         </div>
     </form>
 </section>
@@ -90,8 +152,8 @@
             Search Results
             {% if request.args.get('keyword') %}
             for "<strong>{{ request.args.get('keyword') }}</strong>"
-            {% elif selected_diet and selected_diet != 'all' %}
-            for <strong>{{ selected_diet }}</strong>
+            {% elif selected_diets %}
+            for <strong>{{ selected_diets | join(', ') }}</strong>
             {% endif %}
         </h2>
         <span class="results-count">Found <strong id="displayed-count">{{ meals|length }}</strong> items</span>
@@ -132,7 +194,7 @@
     <!-- Load more button -->
     <div class="load-more-wrapper" style="text-align: center; margin: 30px 0;">
         {% if has_more %}
-        <button id="load-more-btn" class="btn-load-more">
+        <button id="load-more-button" class="button-load-more">
             <span>Load More Recipes</span>
             <svg class="load-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
