@@ -1795,22 +1795,43 @@ a.diet-chip.active {
     box-shadow: 0 3px 8px rgba(56, 74, 66, 0.25);
 }
 
-.diet-radio {
-    display: none;
+/* Hide the checkbox and radio buttons completely */
+.diet-checkbox,
+.diet-radio,
+.quick-diet-filters .diet-checkbox {
+    display: none !important;
 }
 
-.diet-chip-label {
+/* Label containing the button */
+.quick-diet-filters .diet-chip-label {
     cursor: pointer;
     display: inline-block;
+    user-select: none;
 }
 
-.diet-radio:checked+.diet-chip {
-    background-color: #e6f4ea;
-    color: #1e4620;
-    border-color: #52796f;
+/* Style for the default state of the button (when NOT selected) */
+.quick-diet-filters .diet-chip {
+    display: inline-block;
+    padding: 8px 14px;
+    border-radius: 20px;
+    background-color: #f1f5f9;
+    color: #475569;
+    border: 1px solid #cbd5e0;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+/* Style if chosen(All the buttons including Matched My Profile turn pastel green) */
+.quick-diet-filters .diet-checkbox:checked+.diet-chip {
+    background-color: #e6f4ea !important;
+    color: #1e4620 !important;
+    border-color: #52796f !important;
     font-weight: 700;
     box-shadow: 0 2px 6px rgba(82, 121, 111, 0.25);
 }
+
+
 
 /*Style for a card */
 
@@ -2450,6 +2471,7 @@ button.button-back:active {
     z-index: 5;
     opacity: 0.1;
 }
+
 /* Disable all links & buttons within the side panels */
 .coverflow-card.prev-1 *,
 .coverflow-card.next-1 * {

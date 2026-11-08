@@ -38,65 +38,73 @@
         <div class="quick-diet-filters">
             <span class="filter-label">Quick Filter:</span>
 
-            {% set current_diet = request.args.get('diet', 'all') %}
+            {% set match_profile = request.args.get('match_profile', 'false') %}
 
+            {% if current_user.is_authenticated %}
+            <!-- Match Profile Filter -->
             <label class="diet-chip-label">
-                <input type="radio" name="diet" value="all" {% if not current_diet or current_diet=='all' %}checked{%
-                    endif %} class="diet-radio">
+                <input type="checkbox" name="match_profile" value="true" {% if match_profile=='true' %}checked{% endif
+                    %} class="diet-checkbox">
+                <span class="diet-chip"> Matched My Profile</span>
+            </label>
+            {% endif %}
+            <label class="diet-chip-label">
+                <input type="checkbox" name="diet" value="all" {% if (not selected_diets) and match_profile !='true'
+                    %}checked{% endif %} class="diet-checkbox">
                 <span class="diet-chip">🌿 All</span>
             </label>
 
             <label class="diet-chip-label">
-                <input type="radio" name="diet" value="Gluten-Free" {% if current_diet=='Gluten-Free' %}checked{% endif
-                    %} class="diet-radio">
+                <input type="checkbox" name="diet" value="Gluten-Free" {% if 'Gluten-Free' in selected_diets %}checked{%
+                    endif %} class="diet-checkbox">
                 <span class="diet-chip">🍚 Gluten-Free</span>
             </label>
 
             <label class="diet-chip-label">
-                <input type="radio" name="diet" value="Dairy-Free" {% if current_diet=='Dairy-Free' %}checked{% endif %}
-                    class="diet-radio">
+                <input type="checkbox" name="diet" value="Dairy-Free" {% if 'Dairy-Free' in selected_diets %}checked{%
+                    endif %} class="diet-checkbox">
                 <span class="diet-chip">🥛 Dairy-free</span>
             </label>
 
             <label class="diet-chip-label">
-                <input type="radio" name="diet" value="Vegan" {% if current_diet=='Vegan' %}checked{% endif %}
-                    class="diet-radio">
+                <input type="checkbox" name="diet" value="Vegan" {% if 'Vegan' in selected_diets %}checked{% endif %}
+                    class="diet-checkbox">
                 <span class="diet-chip">🥬 Vegan</span>
             </label>
 
             <label class="diet-chip-label">
-                <input type="radio" name="diet" value="Vegetarian" {% if current_diet=='Vegetarian' %}checked{% endif %}
-                    class="diet-radio">
+                <input type="checkbox" name="diet" value="Vegetarian" {% if 'Vegetarian' in selected_diets %}checked{%
+                    endif %} class="diet-checkbox">
                 <span class="diet-chip">🥗 Vegetarian</span>
             </label>
 
             <label class="diet-chip-label">
-                <input type="radio" name="diet" value="Nut-Free" {% if current_diet=='Nut-Free' %}checked{% endif %}
-                    class="diet-radio">
+                <input type="checkbox" name="diet" value="Nut-Free" {% if 'Nut-Free' in selected_diets %}checked{% endif
+                    %} class="diet-checkbox">
                 <span class="diet-chip">🌰 Nut-Free</span>
             </label>
 
             <label class="diet-chip-label">
-                <input type="radio" name="diet" value="Soy-Free" {% if current_diet=='Soy-Free' %}checked{% endif %}
-                    class="diet-radio">
+                <input type="checkbox" name="diet" value="Soy-Free" {% if 'Soy-Free' in selected_diets %}checked{% endif
+                    %} class="diet-checkbox">
                 <span class="diet-chip">🫘 Soy-Free</span>
             </label>
 
             <label class="diet-chip-label">
-                <input type="radio" name="diet" value="Halal" {% if current_diet=='Halal' %}checked{% endif %}
-                    class="diet-radio">
+                <input type="checkbox" name="diet" value="Halal" {% if 'Halal' in selected_diets %}checked{% endif %}
+                    class="diet-checkbox">
                 <span class="diet-chip">🧆 Halal</span>
             </label>
 
             <label class="diet-chip-label">
-                <input type="radio" name="diet" value="Kosher" {% if current_diet=='Kosher' %}checked{% endif %}
-                    class="diet-radio">
+                <input type="checkbox" name="diet" value="Kosher" {% if 'Kosher' in selected_diets %}checked{% endif %}
+                    class="diet-checkbox">
                 <span class="diet-chip">🥯 Kosher</span>
             </label>
 
             <label class="diet-chip-label">
-                <input type="radio" name="diet" value="Low-Sodium" {% if current_diet=='Low-Sodium' %}checked{% endif %}
-                    class="diet-radio">
+                <input type="checkbox" name="diet" value="Low-Sodium" {% if 'Low-Sodium' in selected_diets %}checked{%
+                    endif %} class="diet-checkbox">
                 <span class="diet-chip">🧂 Low-Sodium</span>
             </label>
             <!-- Category and Meal Type Dropdown -->
@@ -144,8 +152,8 @@
             Search Results
             {% if request.args.get('keyword') %}
             for "<strong>{{ request.args.get('keyword') }}</strong>"
-            {% elif selected_diet and selected_diet != 'all' %}
-            for <strong>{{ selected_diet }}</strong>
+            {% elif selected_diets %}
+            for <strong>{{ selected_diets | join(', ') }}</strong>
             {% endif %}
         </h2>
         <span class="results-count">Found <strong id="displayed-count">{{ meals|length }}</strong> items</span>

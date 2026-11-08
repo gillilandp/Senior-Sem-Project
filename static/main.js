@@ -320,14 +320,41 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
     });
+    // 6) Auto-submit search form when clicking any filter chip including Matched My Profile
+    const dietCheckboxes = document.querySelectorAll('.quick-diet-filters .diet-checkbox');
+    const searchForm = document.getElementById('recipeSearchForm');
+
+    if (dietCheckboxes.length > 0 && searchForm) {
+        dietCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function () {
+                // If clicking the "Matched My Profile" button, uncheck other individual diet buttons
+                if (this.name === 'match_profile' && this.checked) {
+                    const dietInputs = document.querySelectorAll('input[name="diet"]');
+                    dietInputs.forEach(input => input.checked = false);
+                }
+
+                // If clicking any individual diet button, uncheck "Matched My Profile"
+                if (this.name === 'diet' && this.checked && this.value !== 'all') {
+                    const matchInput = document.querySelector('input[name="match_profile"]');
+                    if (matchInput) {
+                        matchInput.checked = false;
+                    }
+                }
+
+                // Auto-submit the search form immediately when a filter is clicked
+                searchForm.submit();
+            });
+        });
+    }
 });
 
-// 6) Restore State when clicking "GO BACK" and Return to the previous page (recipes.html or main.html) 
+
+// 7) Restore State when clicking "GO BACK" and Return to the previous page (recipes.html or main.html) 
 window.addEventListener("pageshow", function (e) {
     if (e.persisted || (window.performance && window.performance.navigation.type === 2)) {
         const pageKey = window.location.pathname;
 
-        // 6a. Restore the list of items loaded via "Load More" and the item count
+        // 7a. Restore the list of items loaded via "Load More" and the item count
         const savedContainerHTML = sessionStorage.getItem(pageKey + '_containerHTML');
         const savedCountText = sessionStorage.getItem(pageKey + '_countText');
         const savedLoadMoreHTML = sessionStorage.getItem(pageKey + '_loadMoreHTML');
@@ -349,7 +376,7 @@ window.addEventListener("pageshow", function (e) {
             sessionStorage.removeItem(pageKey + '_loadMoreHTML');
         }
 
-        // 6b. Restore the horizontal scroll position of the carousel (main.html)
+        // 7b. Restore the horizontal scroll position of the carousel (main.html)
         const track = document.querySelector(".carousel-track-container");
         const savedTrackScrollLeft = sessionStorage.getItem(pageKey + '_trackScrollLeft');
         if (track && savedTrackScrollLeft !== null) {
@@ -357,7 +384,7 @@ window.addEventListener("pageshow", function (e) {
             sessionStorage.removeItem(pageKey + '_trackScrollLeft');
         }
 
-        // 6c. Restore vertical page scroll position
+        // 7c. Restore vertical page scroll position
         if ('scrollRestoration' in history) {
             history.scrollRestoration = 'manual'; // Avoid the browser's default scroll restoration behavior
         }

@@ -16,7 +16,9 @@
         </p>
         <div class="hero-actions">
             <a href="{{ url_for('profile') }}" class="button-primary">Build Your Free Profile &rarr;</a>
-            <a href="#" class="button-secondary">See How We Verify</a>
+            <a href="{{ url_for('search_recipes', match_profile='true') }}" class="button-secondary">
+                ✨ View Matched Recipes &rarr;
+            </a>
         </div>
         <div class="social-proof">
             <div class="avatar-group">
@@ -32,10 +34,10 @@
     </div>
 </section>
 
-<!-- 2.Custom Profile Setup Section -->
-<section class="profile-setup-section">
+<!-- 2. Diet Guide Section -->
+<section class="profile-setup-section" id="profile-setup-section">
     <div class="section-header">
-        <span class="sub-caption">CUSTOM PROFILE SETUP</span>
+        <span class="sub-caption">DIET GUIDE</span>
         <h2 class="section-title">Explore Your Safe Dietary Guidelines</h2>
         <p class="section-subtitle">Select a dietary restriction below to view safe foods, items to avoid, and verified
             recipes tailored for you.</p>

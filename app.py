@@ -302,9 +302,11 @@ def logout():
 def search_recipes():
     keyword = request.args.get('keyword', '').strip()
     category_filter = request.args.get('category', '').strip()
-    diet_filter = request.args.get('diet', 'all').strip()
+    selected_diets = request.args.getlist('diet')
+    selected_diets = [diet for diet in selected_diets if diet != 'all']
     prep_filter = request.args.get('prep', '').strip()
     type_filter = request.args.get('type', '').strip()
+    match_profile = request.args.get('match_profile', 'false').strip() # Filter mới
     page = int(request.args.get('page', 1))
     limit = 15
 
@@ -312,6 +314,25 @@ def search_recipes():
     fetch_limit = limit
 
     conn = get_db_connection()
+
+    user_restrictions = []
+    user_avoid_ingredients = []
+
+    if match_profile == 'true' and current_user.is_authenticated:
+        profile = conn.execute(
+            'SELECT * FROM dietary_profile WHERE user_id = ?', 
+            (current_user.id,)
+        ).fetchone()
+
+        if profile:
+            if profile['restrictions']:
+                user_restrictions = [restriction.strip() for restriction in profile['restrictions'].split(',') if restriction.strip()]
+                # Add the filter chosen by the user in their profile after searching for matching My Profile recipes
+                for restriction in user_restrictions:
+                    if restriction not in selected_diets:
+                        selected_diets.append(restriction)
+            if 'ingredients_to_avoid' in profile.keys() and profile['ingredients_to_avoid']:
+                user_avoid_ingredients = [i.strip().lower() for i in profile['ingredients_to_avoid'].split(',') if i.strip()]
 
     # 1) Dynamically generate SQL conditions by flexibly combining multiple filters
     conditions = []
@@ -325,71 +346,74 @@ def search_recipes():
     if category_filter:
         conditions.append("LOWER(category) = ?")
         params.append(category_filter.lower())
-    # c) Add diet filter condition
-    if diet_filter and diet_filter.lower() != 'all':
-        conditions.append("LOWER(dietary_tags) LIKE ?")
-        params.append(f"%{diet_filter.lower()}%")
-
+    
     where_clause = " WHERE " + " AND ".join(conditions) if conditions else ""
 
     # d) Add prep or type filter condition, which will be applied after fetching the data
-    if prep_filter or type_filter:
-        data_query = f"SELECT raw_data, dietary_tags FROM recipe_cache{where_clause}"
-        rows = conn.execute(data_query, params).fetchall()
-        conn.close()
+    data_query = f"SELECT raw_data, dietary_tags FROM recipe_cache{where_clause}"
+    rows = conn.execute(data_query, params).fetchall()
+    conn.close()
 
-        filtered_meals = []
-        for row in rows:
-            meal = json.loads(row['raw_data'])
-            cook_label = get_cooking_label(meal.get('strInstructions', ''))
-            prep_label = get_prep_label(meal)
+    filtered_meals = []
+    for row in rows:
+        meal = json.loads(row['raw_data'])
+        cook_label = get_cooking_label(meal.get('strInstructions', ''))
+        prep_label = get_prep_label(meal)
+        meal_tags = (row['dietary_tags'] or '').lower()
 
-            # Filter by prep_filter (prep_label)
-            if prep_filter == 'minimal' and prep_label != 'Easy to prepare':
+        # Filter by prep_filter (prep_label)
+        if prep_filter == 'minimal' and prep_label != 'Easy to prepare':
+            continue
+        if prep_filter == 'standard' and prep_label != 'Standard to prepare':
+            continue
+        if prep_filter == 'complex' and prep_label != 'Hard to prepare':
+            continue
+
+        # Filter by type_filter (cook_label)
+        if type_filter == 'quick' and cook_label != 'Quick and Easy':
+            continue
+        if type_filter == 'standard' and cook_label != 'Standard Cooking':
+            continue
+        if type_filter == 'detailed' and cook_label != 'Home cooked Special (Longer Recipe)':
+            continue
+
+        # Filter meals based on user profile or selected diets
+        if match_profile == 'true' and current_user.is_authenticated:
+            # If choose Match Profile: Only check the safety standards of the Profile
+            meal_ingredients_list = []
+            for i in range(1, 21):
+                ing = meal.get(f'strIngredient{i}')
+                if ing and ing.strip():
+                    meal_ingredients_list.append(ing.strip().lower())
+            meal_ingredients_text = " ".join(meal_ingredients_list)
+
+            # Must satisfy the dietary restrictions in the Profile
+            if user_restrictions:
+                has_all_profile_restrictions = all(restriction.lower() in meal_tags for restriction in user_restrictions)
+                if not has_all_profile_restrictions:
+                    continue
+
+            # Do not contain allergen ingredients in the Profile
+            if user_avoid_ingredients:
+                has_avoided_ingredients = any(ingredient in meal_ingredients_text for ingredient in user_avoid_ingredients)
+                if has_avoided_ingredients:
+                    continue
+
+        elif selected_diets:
+            # Otherwise, if Match Profile is not selected, filter by the manually selected diet buttons
+            meal_tags = (row['dietary_tags'] or '').lower()
+            has_all_selected_diets = all(diet.lower() in meal_tags for diet in selected_diets)
+            if not has_all_selected_diets:
                 continue
-            if prep_filter == 'standard' and prep_label != 'Standard to prepare':
-                continue
-            if prep_filter == 'complex' and prep_label != 'Hard to prepare':
-                continue
 
-            # Filter by type_filter (cook_label)
-            if type_filter == 'quick' and cook_label != 'Quick and Easy':
-                continue
-            if type_filter == 'standard' and cook_label != 'Standard Cooking':
-                continue
-            if type_filter == 'detailed' and cook_label != 'Home cooked Special (Longer Recipe)':
-                continue
+        meal['cook_label'] = cook_label
+        meal['prep_label'] = prep_label
+        filtered_meals.append(meal)
 
-            meal['cook_label'] = cook_label
-            meal['prep_label'] = prep_label
-            filtered_meals.append(meal)
+    total_count = len(filtered_meals)
+    meals = filtered_meals[offset:offset + limit]
+    has_more = total_count > (offset + limit)
 
-        total_count = len(filtered_meals)
-        has_more = total_count > fetch_limit
-        meals = filtered_meals[:fetch_limit]
-    else:
-        # 2) Count the total number of records that match the criteria
-        count_query = f"SELECT COUNT(*) FROM recipe_cache{where_clause}"
-        total_count = conn.execute(count_query, params).fetchone()[0]
-
-        # 3) Retrieve list of dishes from SQLite
-        data_query = f"SELECT raw_data, dietary_tags FROM recipe_cache{where_clause} LIMIT ? OFFSET ?"
-        rows = conn.execute(data_query, params + [limit + 1, offset]).fetchall()
-        conn.close()
-
-        # 4) Read data and assign sub-labels
-        has_more = len(rows) > limit
-        display_rows = rows[:limit]
-        meals = []
-
-        for row in display_rows:
-            meal = json.loads(row['raw_data'])
-            cook_label = get_cooking_label(meal.get('strInstructions', ''))
-            prep_label = get_prep_label(meal)
-
-            meal['cook_label'] = cook_label
-            meal['prep_label'] = prep_label
-            meals.append(meal)
 
     # Take a list of countries from the database to display in the filter dropdown
     countries = get_countries_from_db()
@@ -398,7 +422,8 @@ def search_recipes():
         'recipes.html', 
         meals=meals, 
         countries=countries, 
-        selected_diet=diet_filter,
+        selected_diets = selected_diets,
+        match_profile=match_profile,
         page=page,
         has_more=has_more,
         total_count=total_count
@@ -682,6 +707,7 @@ def diet_ingredients_detail(diet_name):
         diet_name=diet_name, 
         ingredients=ingredients_list
     )
+
 
 if __name__ == '__main__':
     init_db()  # Automatically run the database initialization when the application launches

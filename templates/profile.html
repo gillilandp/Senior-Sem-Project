@@ -257,15 +257,9 @@
             const query = searchInput.value.toLowerCase().trim();
             suggestions.innerHTML = "";
 
-            if (query === "") {
-                hideSuggestions();
-                return;
-            }
-
-            const matches = restrictions.filter(restriction =>
-                restriction.toLowerCase().includes(query) &&
-                !selected.has(restriction)
-            );
+            const matches = query === ""
+                ? restrictions.filter(restriction => !selected.has(restriction))
+                : restrictions.filter(restriction => restriction.toLowerCase().includes(query) && !selected.has(restriction));
 
             if (matches.length === 0) {
                 hideSuggestions();
@@ -312,7 +306,7 @@
             const removeButton = document.createElement("button");
             removeButton.type = "button";
             removeButton.className = "remove-restriction";
-            removeButton.textContent = "×";
+            removeButton.textContent = "x";
             removeButton.dataset.value = restriction;
             removeButton.setAttribute("aria-label", "Remove " + restriction);
 
@@ -345,6 +339,7 @@
         });
 
         searchInput.addEventListener("input", showSuggestions);
+        searchInput.addEventListener("focus", showSuggestions);
 
         document.addEventListener("click", function (event) {
             if (!searchInput.contains(event.target) && !suggestions.contains(event.target)) {
