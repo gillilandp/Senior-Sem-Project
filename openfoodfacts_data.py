@@ -1,145 +1,183 @@
-import gzip
-import json
 import sqlite3
 import time
+import requests
 
 DB_NAME = "safeplate.db"
-GZ_FILE_PATH = "openfoodfacts-products.jsonl.gz"
+
+# List of popular product categories
+TARGET_CATEGORIES = [
+    "milks",
+    "plant-based-milks",
+    "beverages",
+    "fruit-juices",
+    "teas",
+    "coffees",
+    "groceries",
+    "sauces",
+    "condiments",
+    "canned-foods",
+    "biscuits",
+    "snacks",
+    "sweet-snacks",
+    "salty-snacks",
+    "chocolates",
+    "candies",
+    "cheeses",
+    "yogurts",
+    "desserts",
+    "ice-creams",
+    "breakfast-cereals",
+    "pastas",
+    "noodle-dishes",
+]
 
 
-def init_product_table():
-    """Initialize the grocery_products table in safeplate.db if it doesn't exist."""
+def init_db():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
-
     cursor.execute(
         """
         CREATE TABLE IF NOT EXISTS grocery_products (
             code TEXT PRIMARY KEY,
             product_name TEXT,
             brands TEXT,
-            categories TEXT,
             allergens_tags TEXT,
             labels_tags TEXT,
-            ingredients_text TEXT,
             image_url TEXT
         )
     """
     )
-
-    # Create indexes for fast searching by Product Name & Brands later on
     cursor.execute(
-        "CREATE INDEX IF NOT EXISTS idx_product_name ON grocery_products(product_name);"
+        "CREATE INDEX IF NOT EXISTS idx_name ON grocery_products(product_name);"
     )
     cursor.execute(
         "CREATE INDEX IF NOT EXISTS idx_brands ON grocery_products(brands);"
     )
-
     conn.commit()
     conn.close()
-    print("-> Initialized the 'grocery_products' table and indexes in SQLite.")
 
 
-def import_data_to_sqlite():
-    init_product_table()
-
+def fetch_and_save():
+    init_db()
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
 
-    count = 0
-    batch = []
-    start_time = time.time()
+    total_added = 0
+    # Change the User-Agent to be more explicit to avoid being considered a malicious bot
+    headers = {
+        "User-Agent": (
+            "SafePlateApp - StudentProject - Contact: admin@safeplate.com"
+        )
+    }
 
     print(
-        f"⏳ Reading the compressed file '{GZ_FILE_PATH}' and loading data into {DB_NAME}..."
+        "🚀 Starting safe data download (avoiding 429 Rate-limit) into safeplate.db...\n"
     )
 
-    try:
-        # Read the .gz file line by line (JSON Lines) without decompressing it to the hard drive
-        with gzip.open(GZ_FILE_PATH, "rt", encoding="utf-8") as f:
-            for line in f:
-                try:
-                    item = json.loads(line)
+    for category in TARGET_CATEGORIES:
+        print(f"📦 Downloading category: '{category}'...")
 
-                    code = item.get("code")
-                    name = item.get("product_name") or item.get(
-                        "product_name_en", ""
-                    )
+        # Use the standard Open Food Facts API v2 Search
+        url = "https://world.openfoodfacts.org/cgi/search.pl"
+        params = {
+            "action": "process",
+            "tagtype_0": "categories",
+            "tag_contains_0": "contains",
+            "tag_0": category,
+            "json": "1",
+            "page_size": "50",
+            "page": "1",
+        }
 
-                    # Skip garbage data lines that have no barcode or product name
-                    if not code or not name.strip():
-                        continue
+        try:
+            res = requests.get(
+                url, params=params, headers=headers, timeout=12
+            )
 
-                    brands = item.get("brands", "")
-                    categories = item.get("categories", "")
+            if res.status_code == 429:
+                print(
+                    "   ⚠️ Rate-limited (429)! Pausing for 5 seconds before retrying..."
+                )
+                time.sleep(5)
+                res = requests.get(
+                    url, params=params, headers=headers, timeout=12
+                )
 
-                    # Convert the tags array to a string for storing in SQLite
-                    allergens_tags = ",".join(item.get("allergens_tags", []))
-                    labels_tags = ",".join(item.get("labels_tags", []))
+            if res.status_code != 200:
+                print(f"   ❌ Access failed (Status code: {res.status_code})")
+                time.sleep(2)
+                continue
 
-                    ingredients_text = item.get("ingredients_text", "")
-                    image_url = item.get("image_front_small_url") or item.get(
-                        "image_url", ""
-                    )
+            data = res.json()
+            products = data.get("products", [])
 
-                    batch.append(
-                        (
-                            str(code),
-                            name.strip(),
-                            brands.strip(),
-                            categories.strip(),
-                            allergens_tags,
-                            labels_tags,
-                            ingredients_text,
-                            image_url,
-                        )
-                    )
-                    count += 1
+            if not products:
+                print("   -> No products found.")
+                continue
 
-                    # Save in batches (Batch) of 10,000 rows to achieve the best write speed into SQLite
-                    if len(batch) >= 10000:
-                        cursor.executemany(
-                            """
-                            INSERT OR REPLACE INTO grocery_products 
-                            (code, product_name, brands, categories, allergens_tags, labels_tags, ingredients_text, image_url)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                        """,
-                            batch,
-                        )
-                        conn.commit()
-                        batch = []
-                        print(f"   -> Loaded {count:,} products...")
+            batch = []
+            for p in products:
+                code = p.get("code")
+                name = (
+                    p.get("product_name")
+                    or p.get("product_name_en")
+                    or p.get("product_name_fr")
+                )
 
-                except (json.JSONDecodeError, Exception):
+                if not code or not name:
                     continue
 
-        # Do not forget to load the remaining items in the last batch (if any)
-        if batch:
+                allergens = ", ".join(
+                    [
+                        t.replace("en:", "").capitalize()
+                        for t in p.get("allergens_tags", [])
+                    ]
+                )
+                labels = ", ".join(
+                    [
+                        t.replace("en:", "").capitalize()
+                        for t in p.get("labels_tags", [])
+                    ]
+                )
+                image = p.get("image_front_small_url") or p.get("image_url", "")
+                brands = p.get("brands", "N/A")
+
+                batch.append(
+                    (
+                        str(code),
+                        name.strip(),
+                        brands.strip(),
+                        allergens,
+                        labels,
+                        image,
+                    )
+                )
+
             cursor.executemany(
                 """
                 INSERT OR REPLACE INTO grocery_products 
-                (code, product_name, brands, categories, allergens_tags, labels_tags, ingredients_text, image_url)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                (code, product_name, brands, allergens_tags, labels_tags, image_url)
+                VALUES (?, ?, ?, ?, ?, ?)
             """,
                 batch,
             )
             conn.commit()
 
-        elapsed_time = round(time.time() - start_time, 2)
-        print(
-            f"✅ COMPLETED! Total of {count:,} products loaded into 'safeplate.db' in {elapsed_time} seconds."
-        )
+            total_added += len(batch)
+            print(f"   -> Successfully added {len(batch)} products.")
 
-    except FileNotFoundError:
-        print(
-            f"❌ Don't find file '{GZ_FILE_PATH}'! Please make sure you have downloaded the file from Open Food Facts and placed it in the same directory."
-        )
-    except Exception as e:
-        conn.rollback()
-        print(f"❌ Error during data loading: {e}")
-    finally:
-        conn.close()
+            # Relax 3 seconds between requests to avoid server IP lock
+            time.sleep(3)
+
+        except Exception as e:
+            print(f"❌ Error fetching category {category}: {e}")
+            time.sleep(5)
+
+    conn.close()
+    print(
+        f"\n Finished! Total products added to safeplate.db: {total_added}"
+    )
 
 
 if __name__ == "__main__":
-    import_data_to_sqlite()
+    fetch_and_save()

@@ -1,22 +1,23 @@
-import sqlite3
-from urllib import response
-import random
-import os
+import gzip
 import json
+import os
+import random
 import re
-from flask import Flask, flash, redirect, render_template, request, url_for
+import sqlite3
 from concurrent.futures import ThreadPoolExecutor
-import requests
+from urllib import response
+
+from flask import Flask, flash, redirect, render_template, request, url_for
 from flask_login import (
     LoginManager,
     UserMixin,
+    current_user,
     login_required,
     login_user,
     logout_user,
-    current_user
 )
-
-from werkzeug.security import generate_password_hash, check_password_hash
+import requests
+from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(24)
@@ -24,6 +25,7 @@ DB_NAME = 'safeplate.db'
 
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
+
 
 # Function to get a connection to the SQLite3 database
 def get_db_connection():
@@ -33,12 +35,13 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row
     return conn
 
+
 def init_db():
     """Create database tables if they do not exist."""
     conn = get_db_connection()
 
     # User table with first_name and last_name
-    conn.execute('''
+    conn.execute("""
         CREATE TABLE IF NOT EXISTS user (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             email TEXT UNIQUE NOT NULL,
@@ -46,10 +49,10 @@ def init_db():
             first_name TEXT,
             last_name TEXT
         )
-    ''')
+    """)
 
     # Dietary profile table with all fields
-    conn.execute('''
+    conn.execute("""
         CREATE TABLE IF NOT EXISTS dietary_profile (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER UNIQUE NOT NULL,
@@ -58,10 +61,30 @@ def init_db():
             dietary_notes TEXT,
             FOREIGN KEY (user_id) REFERENCES user(id)
         )
-    ''')
+    """)
+
+    # Grocery products table (dùng lưu dữ liệu Open Food Facts)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS grocery_products (
+            code TEXT PRIMARY KEY,
+            product_name TEXT,
+            brands TEXT,
+            allergens_tags TEXT,
+            labels_tags TEXT,
+            image_url TEXT
+        )
+    """)
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_grocery_name ON"
+        " grocery_products(product_name);"
+    )
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_grocery_brands ON"
+        " grocery_products(brands);"
+    )
 
     try:
-        with open('database.sql', 'r', encoding='utf-8') as f:
+        with open("database.sql", "r", encoding="utf-8") as f:
             conn.executescript(f.read())
     except Exception as e:
         print(f"Note: Error or notice while executing database.sql: {e}")
@@ -72,40 +95,44 @@ def init_db():
 
 # User Information Table in the Database
 class User(UserMixin):
-    def __init__(self, id, email, password, first_name='', last_name=''):
+
+    def __init__(self, id, email, password, first_name="", last_name=""):
         self.id = id
         self.email = email
         self.password = password
-        self.first_name = first_name or ''
-        self.last_name = last_name or ''
+        self.first_name = first_name or ""
+        self.last_name = last_name or ""
+
 
 @login_manager.user_loader
 def load_user(user_id):
     conn = get_db_connection()
-    user = conn.execute('SELECT * FROM user WHERE id = ?', (int(user_id),)).fetchone()
+    user = conn.execute(
+        "SELECT * FROM user WHERE id = ?", (int(user_id),)
+    ).fetchone()
     conn.close()
     if user:
         return User(
-            id=user['id'], 
-            email=user['email'], 
-            password=user['password'],
-            first_name=user['first_name'] if 'first_name' in user.keys() else '',
-            last_name=user['last_name'] if 'last_name' in user.keys() else ''
+            id=user["id"],
+            email=user["email"],
+            password=user["password"],
+            first_name=user["first_name"] if "first_name" in user.keys() else "",
+            last_name=user["last_name"] if "last_name" in user.keys() else "",
         )
     return None
 
+
 # Rank for recipes based on their tags
 def get_cooking_label(instructions_input):
-    """
-    Automatically determine the length/complexity label based on the total word count of the instructions. 
+    """Automatically determine the length/complexity label based on the total word count of the instructions.
+
     The input can be the raw text string or a list of cleaned step sentences.
     """
     if isinstance(instructions_input, list):
         full_text = " ".join(instructions_input)
     else:
-        full_text = str(instructions_input or '')
+        full_text = str(instructions_input or "")
 
-    # Count the number of words in the full text
     word_count = len(full_text.split())
 
     if word_count < 60:
@@ -115,10 +142,11 @@ def get_cooking_label(instructions_input):
     else:
         return "Home cooked Special (Longer Recipe)"
 
+
 # Rank for recipes based on their ingredients
 def get_prep_label(meal_or_ingredients):
-    """
-    Determine the preparation level based on the ingredient count. 
+    """Determine the preparation level based on the ingredient count.
+
     The input can be a 'meal' dictionary from an API or a list of ingredients.
     """
     if isinstance(meal_or_ingredients, list):
@@ -126,7 +154,7 @@ def get_prep_label(meal_or_ingredients):
     elif isinstance(meal_or_ingredients, dict):
         count = 0
         for i in range(1, 21):
-            ing = meal_or_ingredients.get(f'strIngredient{i}')
+            ing = meal_or_ingredients.get(f"strIngredient{i}")
             if ing and ing.strip():
                 count += 1
     else:
@@ -138,64 +166,70 @@ def get_prep_label(meal_or_ingredients):
         return "Standard to prepare"
     else:
         return "Hard to prepare"
-    
+
 
 def get_flag_emoji(country_code):
-    """ Change code name of countries 'VN', 'IE' become flag Emoji ."""
+    """Change code name of countries 'VN', 'IE' become flag Emoji ."""
     if not country_code or len(country_code) != 2:
         return "🌐"
-    return chr(127397 + ord(country_code[0].upper())) + chr(127397 + ord(country_code[1].upper()))
+    return chr(127397 + ord(country_code[0].upper())) + chr(
+        127397 + ord(country_code[1].upper())
+    )
+
 
 # Take the list of country from safeplate.DB
 def get_countries_from_db():
     """Retrieve a list of countries, including flag information, from the 'areas_cache' table in SQLite."""
     conn = get_db_connection()
     try:
-        # Take a list of all area have a meal, avoid country don't have meals
-        rows = conn.execute('SELECT * FROM available_countries_view').fetchall() 
+        rows = conn.execute("SELECT * FROM available_countries_view").fetchall()
     except Exception as e:
         print(f"Error executing view: {e}")
-        rows = []   
+        rows = []
     conn.close()
 
     countries = {}
     for row in rows:
-        countries[row['area_name']] = {
-            'code': row['country_code'],
-            'name': row['country_name'],
-            'flag_url': row['flag_url'],
-            'emoji': get_flag_emoji(row['country_code']) 
+        countries[row["area_name"]] = {
+            "code": row["country_code"],
+            "name": row["country_name"],
+            "flag_url": row["flag_url"],
+            "emoji": get_flag_emoji(row["country_code"]),
         }
     return countries
 
-# Main route for the home page
 
 # 1. main.html
-@app.route('/')
+@app.route("/")
 def home():
     recipes = []
     try:
         conn = get_db_connection()
-        # Take 8 random recipes from SQLite database
-        rows = conn.execute('SELECT raw_data FROM recipe_cache ORDER BY RANDOM() LIMIT 8').fetchall()
+        rows = conn.execute(
+            "SELECT raw_data FROM recipe_cache ORDER BY RANDOM() LIMIT 8"
+        ).fetchall()
         conn.close()
 
         for row in rows:
-            meal = json.loads(row['raw_data'])
-            raw_tags = meal.get('strTags')
-            tags_list = raw_tags.split(',') if raw_tags else [meal.get('strCategory', 'SAFE')]
-            raw_instructions = meal.get('strInstructions', '')
+            meal = json.loads(row["raw_data"])
+            raw_tags = meal.get("strTags")
+            tags_list = (
+                raw_tags.split(",")
+                if raw_tags
+                else [meal.get("strCategory", "SAFE")]
+            )
+            raw_instructions = meal.get("strInstructions", "")
 
             recipes.append({
-                'id': meal.get('idMeal'),
-                'idMeal': meal.get('idMeal'),
-                'name': meal.get('strMeal'),
-                'category': meal.get('strCategory'),
-                'area': meal.get('strArea'),
-                'image': meal.get('strMealThumb'),
-                'cooktime': get_cooking_label(raw_instructions),
-                'prep_label': get_prep_label(meal),
-                'tags': tags_list
+                "id": meal.get("idMeal"),
+                "idMeal": meal.get("idMeal"),
+                "name": meal.get("strMeal"),
+                "category": meal.get("strCategory"),
+                "area": meal.get("strArea"),
+                "image": meal.get("strMealThumb"),
+                "cooktime": get_cooking_label(raw_instructions),
+                "prep_label": get_prep_label(meal),
+                "tags": tags_list,
             })
     except Exception as e:
         print(f"Error loading home recipes: {e}")
@@ -203,259 +237,277 @@ def home():
     diet_info = {}
     diet_ingredients = {}
 
-    info_path = os.path.join(app.static_folder, 'diet_info.json')
+    info_path = os.path.join(app.static_folder, "diet_info.json")
     if os.path.exists(info_path):
-        with open(info_path, 'r', encoding='utf-8') as f:
+        with open(info_path, "r", encoding="utf-8") as f:
             diet_info = json.load(f)
 
-    ingredients_path = os.path.join(app.static_folder, 'diet_ingredients.json')
+    ingredients_path = os.path.join(app.static_folder, "diet_ingredients.json")
     if os.path.exists(ingredients_path):
-        with open(ingredients_path, 'r', encoding='utf-8') as f:
+        with open(ingredients_path, "r", encoding="utf-8") as f:
             diet_ingredients = json.load(f)
 
-    return render_template('main.html', 
-                           recipes=recipes, 
-                           diet_info=diet_info, 
-                           diet_ingredients=diet_ingredients)
+    return render_template(
+        "main.html",
+        recipes=recipes,
+        diet_info=diet_info,
+        diet_ingredients=diet_ingredients,
+    )
 
 
 # 2. Processing Register
-@app.route('/register', methods=['GET', 'POST'])
+@app.route("/register", methods=["GET", "POST"])
 def register():
-    if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
-        first_name = request.form.get('first_name', '').strip()
-        last_name = request.form.get('last_name', '').strip()
+    if request.method == "POST":
+        email = request.form.get("email")
+        password = request.form.get("password")
+        first_name = request.form.get("first_name", "").strip()
+        last_name = request.form.get("last_name", "").strip()
 
         conn = get_db_connection()
 
-        # Check if email already exists
         user_exists = conn.execute(
-            'SELECT * FROM user WHERE email = ?', (email,)
+            "SELECT * FROM user WHERE email = ?", (email,)
         ).fetchone()
         if user_exists:
             conn.close()
-            return 'Email this has already been used!'
+            return "Email this has already been used!"
 
-        # Encrypt the password and save it to the database.
-        hashed_password = generate_password_hash(password, method='scrypt')
+        hashed_password = generate_password_hash(password, method="scrypt")
         conn.execute(
-            'INSERT INTO user (email, password, first_name, last_name) VALUES (?, ?, ?, ?)', 
-            (email, hashed_password, first_name, last_name)
+            "INSERT INTO user (email, password, first_name, last_name) VALUES"
+            " (?, ?, ?, ?)",
+            (email, hashed_password, first_name, last_name),
         )
         conn.commit()
         conn.close()
 
-        return redirect(url_for('login'))
+        return redirect(url_for("login"))
 
-    return render_template('register.html')
+    return render_template("register.html")
 
 
 # 3. Processing Login
-@app.route('/login', methods=['GET', 'POST'])
+@app.route("/login", methods=["GET", "POST"])
 def login():
-    if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
+    if request.method == "POST":
+        email = request.form.get("email")
+        password = request.form.get("password")
 
         conn = get_db_connection()
         user = conn.execute(
-            'SELECT * FROM user WHERE email = ?', (email,)
+            "SELECT * FROM user WHERE email = ?", (email,)
         ).fetchone()
         conn.close()
 
-        # Check users and password
-        if user and check_password_hash(user['password'], password):
+        if user and check_password_hash(user["password"], password):
             user_obj = User(
-                id=user['id'], 
-                email=user['email'], 
-                password=user['password'],
-                first_name=user['first_name'] if 'first_name' in user.keys() else '',
-                last_name=user['last_name'] if 'last_name' in user.keys() else ''
+                id=user["id"],
+                email=user["email"],
+                password=user["password"],
+                first_name=(
+                    user["first_name"] if "first_name" in user.keys() else ""
+                ),
+                last_name=(
+                    user["last_name"] if "last_name" in user.keys() else ""
+                ),
             )
             login_user(user_obj)
-            return redirect(url_for('home'))
+            return redirect(url_for("home"))
         else:
-            return 'Invalid email or password!'
+            return "Invalid email or password!"
 
-    return render_template('login.html')
+    return render_template("login.html")
+
 
 # 4. Forgot Password
-@app.route('/forgot-password', methods=['GET', 'POST'])
+@app.route("/forgot-password", methods=["GET", "POST"])
 def forgot_password():
-    if request.method == 'POST':
-        email = request.form.get('email')
-        return f'Sent password reset instructions to email: {email}'
-    return render_template('forgot_password.html')
+    if request.method == "POST":
+        email = request.form.get("email")
+        return f"Sent password reset instructions to email: {email}"
+    return render_template("forgot_password.html")
+
 
 # 5. Log out
-@app.route('/logout')
+@app.route("/logout")
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for('home'))
+    return redirect(url_for("home"))
 
-# TheMealDB API: https://www.themealdb.com/api.php
-@app.route('/recipes', methods=['GET'])
+
+# Search Recipes
+@app.route("/recipes", methods=["GET"])
 def search_recipes():
-    keyword = request.args.get('keyword', '').strip()
-    category_filter = request.args.get('category', '').strip()
-    selected_diets = request.args.getlist('diet')
-    selected_diets = [diet for diet in selected_diets if diet != 'all']
-    prep_filter = request.args.get('prep', '').strip()
-    type_filter = request.args.get('type', '').strip()
-    match_profile = request.args.get('match_profile', 'false').strip() # Filter mới
-    page = int(request.args.get('page', 1))
+    keyword = request.args.get("keyword", "").strip()
+    category_filter = request.args.get("category", "").strip()
+    selected_diets = request.args.getlist("diet")
+    selected_diets = [diet for diet in selected_diets if diet != "all"]
+    prep_filter = request.args.get("prep", "").strip()
+    type_filter = request.args.get("type", "").strip()
+    match_profile = request.args.get("match_profile", "false").strip()
+    page = int(request.args.get("page", 1))
     limit = 15
 
     offset = (page - 1) * limit
-    fetch_limit = limit
 
     conn = get_db_connection()
 
     user_restrictions = []
     user_avoid_ingredients = []
 
-    if match_profile == 'true' and current_user.is_authenticated:
+    if match_profile == "true" and current_user.is_authenticated:
         profile = conn.execute(
-            'SELECT * FROM dietary_profile WHERE user_id = ?', 
-            (current_user.id,)
+            "SELECT * FROM dietary_profile WHERE user_id = ?",
+            (current_user.id,),
         ).fetchone()
 
         if profile:
-            if profile['restrictions']:
-                user_restrictions = [restriction.strip() for restriction in profile['restrictions'].split(',') if restriction.strip()]
-                # Add the filter chosen by the user in their profile after searching for matching My Profile recipes
+            if profile["restrictions"]:
+                user_restrictions = [
+                    restriction.strip()
+                    for restriction in profile["restrictions"].split(",")
+                    if restriction.strip()
+                ]
                 for restriction in user_restrictions:
                     if restriction not in selected_diets:
                         selected_diets.append(restriction)
-            if 'ingredients_to_avoid' in profile.keys() and profile['ingredients_to_avoid']:
-                user_avoid_ingredients = [i.strip().lower() for i in profile['ingredients_to_avoid'].split(',') if i.strip()]
+            if (
+                "ingredients_to_avoid" in profile.keys()
+                and profile["ingredients_to_avoid"]
+            ):
+                user_avoid_ingredients = [
+                    i.strip().lower()
+                    for i in profile["ingredients_to_avoid"].split(",")
+                    if i.strip()
+                ]
 
-    # 1) Dynamically generate SQL conditions by flexibly combining multiple filters
     conditions = []
     params = []
 
-    # a) Add keyword search condition
     if keyword:
         conditions.append("LOWER(name) LIKE ?")
         params.append(f"%{keyword.lower()}%")
-    # b) Add category filter condition
     if category_filter:
         conditions.append("LOWER(category) = ?")
         params.append(category_filter.lower())
-    
+
     where_clause = " WHERE " + " AND ".join(conditions) if conditions else ""
 
-    # d) Add prep or type filter condition, which will be applied after fetching the data
     data_query = f"SELECT raw_data, dietary_tags FROM recipe_cache{where_clause}"
     rows = conn.execute(data_query, params).fetchall()
     conn.close()
 
     filtered_meals = []
     for row in rows:
-        meal = json.loads(row['raw_data'])
-        cook_label = get_cooking_label(meal.get('strInstructions', ''))
+        meal = json.loads(row["raw_data"])
+        cook_label = get_cooking_label(meal.get("strInstructions", ""))
         prep_label = get_prep_label(meal)
-        meal_tags = (row['dietary_tags'] or '').lower()
+        meal_tags = (row["dietary_tags"] or "").lower()
 
-        # Filter by prep_filter (prep_label)
-        if prep_filter == 'minimal' and prep_label != 'Easy to prepare':
+        if prep_filter == "minimal" and prep_label != "Easy to prepare":
             continue
-        if prep_filter == 'standard' and prep_label != 'Standard to prepare':
+        if prep_filter == "standard" and prep_label != "Standard to prepare":
             continue
-        if prep_filter == 'complex' and prep_label != 'Hard to prepare':
-            continue
-
-        # Filter by type_filter (cook_label)
-        if type_filter == 'quick' and cook_label != 'Quick and Easy':
-            continue
-        if type_filter == 'standard' and cook_label != 'Standard Cooking':
-            continue
-        if type_filter == 'detailed' and cook_label != 'Home cooked Special (Longer Recipe)':
+        if prep_filter == "complex" and prep_label != "Hard to prepare":
             continue
 
-        # Filter meals based on user profile or selected diets
-        if match_profile == 'true' and current_user.is_authenticated:
-            # If choose Match Profile: Only check the safety standards of the Profile
+        if type_filter == "quick" and cook_label != "Quick and Easy":
+            continue
+        if type_filter == "standard" and cook_label != "Standard Cooking":
+            continue
+        if (
+            type_filter == "detailed"
+            and cook_label != "Home cooked Special (Longer Recipe)"
+        ):
+            continue
+
+        if match_profile == "true" and current_user.is_authenticated:
             meal_ingredients_list = []
             for i in range(1, 21):
-                ing = meal.get(f'strIngredient{i}')
+                ing = meal.get(f"strIngredient{i}")
                 if ing and ing.strip():
                     meal_ingredients_list.append(ing.strip().lower())
             meal_ingredients_text = " ".join(meal_ingredients_list)
 
-            # Must satisfy the dietary restrictions in the Profile
             if user_restrictions:
-                has_all_profile_restrictions = all(restriction.lower() in meal_tags for restriction in user_restrictions)
+                has_all_profile_restrictions = all(
+                    restriction.lower() in meal_tags
+                    for restriction in user_restrictions
+                )
                 if not has_all_profile_restrictions:
                     continue
 
-            # Do not contain allergen ingredients in the Profile
             if user_avoid_ingredients:
-                has_avoided_ingredients = any(ingredient in meal_ingredients_text for ingredient in user_avoid_ingredients)
+                has_avoided_ingredients = any(
+                    ingredient in meal_ingredients_text
+                    for ingredient in user_avoid_ingredients
+                )
                 if has_avoided_ingredients:
                     continue
 
         elif selected_diets:
-            # Otherwise, if Match Profile is not selected, filter by the manually selected diet buttons
-            meal_tags = (row['dietary_tags'] or '').lower()
-            has_all_selected_diets = all(diet.lower() in meal_tags for diet in selected_diets)
+            meal_tags = (row["dietary_tags"] or "").lower()
+            has_all_selected_diets = all(
+                diet.lower() in meal_tags for diet in selected_diets
+            )
             if not has_all_selected_diets:
                 continue
 
-        meal['cook_label'] = cook_label
-        meal['prep_label'] = prep_label
+        meal["cook_label"] = cook_label
+        meal["prep_label"] = prep_label
         filtered_meals.append(meal)
 
     total_count = len(filtered_meals)
-    meals = filtered_meals[offset:offset + limit]
+    meals = filtered_meals[offset : offset + limit]
     has_more = total_count > (offset + limit)
 
-
-    # Take a list of countries from the database to display in the filter dropdown
     countries = get_countries_from_db()
 
     return render_template(
-        'recipes.html', 
-        meals=meals, 
-        countries=countries, 
-        selected_diets = selected_diets,
+        "recipes.html",
+        meals=meals,
+        countries=countries,
+        selected_diets=selected_diets,
         match_profile=match_profile,
         page=page,
         has_more=has_more,
-        total_count=total_count
+        total_count=total_count,
     )
 
-# Route to display details of a specific dish based on its ID.
-@app.route('/recipe/<meal_id>')
+
+# Recipe Detail
+@app.route("/recipe/<meal_id>")
 def recipe_detail(meal_id):
     try:
-        # Call TheMealDB API to fetch details by meal ID
         conn = get_db_connection()
-        row = conn.execute('SELECT raw_data FROM recipe_cache WHERE meal_id = ?', (meal_id,)).fetchone()
+        row = conn.execute(
+            "SELECT raw_data FROM recipe_cache WHERE meal_id = ?", (meal_id,)
+        ).fetchone()
         conn.close()
-        
+
         if not row:
-            return redirect(url_for('search_recipes'))
+            return redirect(url_for("search_recipes"))
 
-        meal = json.loads(row['raw_data'])
+        meal = json.loads(row["raw_data"])
 
-        # 1) Process ingredients first
         ingredients = []
         for i in range(1, 21):
-            ingredient = meal.get(f'strIngredient{i}')
-            measure = meal.get(f'strMeasure{i}')
+            ingredient = meal.get(f"strIngredient{i}")
+            measure = meal.get(f"strMeasure{i}")
             if ingredient and ingredient.strip():
                 ingredients.append({
-                    'name': ingredient.strip(),
-                    'measure': measure.strip() if measure else ''
+                    "name": ingredient.strip(),
+                    "measure": measure.strip() if measure else "",
                 })
 
-        # 2) Process instructions OUTSIDE of the ingredient loop
-        raw_instructions = meal.get('strInstructions', '')
-        lines = raw_instructions.split('\r\n') if '\r\n' in raw_instructions else raw_instructions.split('\n')
+        raw_instructions = meal.get("strInstructions", "")
+        lines = (
+            raw_instructions.split("\r\n")
+            if "\r\n" in raw_instructions
+            else raw_instructions.split("\n")
+        )
         cleaned_steps = []
         pro_tips = []
         is_tip_section = False
@@ -465,20 +517,22 @@ def recipe_detail(meal_id):
             if not text:
                 continue
 
-            if re.match(r'^(pro\s*tips?:?|notes?:?|tips?:?)$', text, re.IGNORECASE):
+            if re.match(r"^(pro\s*tips?:?|notes?:?|tips?:?)$", text, re.IGNORECASE):
                 is_tip_section = True
                 continue
 
             if is_tip_section:
-                cleaned_tip = re.sub(r'^[\*\-\d\.]+\s*', '', text).strip()
+                cleaned_tip = re.sub(r"^[\*\-\d\.]+\s*", "", text).strip()
                 if cleaned_tip:
                     pro_tips.append(cleaned_tip)
                 continue
 
-            if re.match(r'^(step\s*\d+:?|\d+\.?)$', text, re.IGNORECASE):
+            if re.match(r"^(step\s*\d+:?|\d+\.?)$", text, re.IGNORECASE):
                 continue
 
-            text = re.sub(r'^(step\s*\d+:?|\d+[\.\)]\s*)', '', text, flags=re.IGNORECASE).strip()
+            text = re.sub(
+                r"^(step\s*\d+:?|\d+[\.\)]\s*)", "", text, flags=re.IGNORECASE
+            ).strip()
             if text:
                 cleaned_steps.append(text)
 
@@ -486,25 +540,25 @@ def recipe_detail(meal_id):
         prep_label = get_prep_label(ingredients)
 
         return render_template(
-            'recipeDetails.html', 
-            meal=meal, 
-            ingredients=ingredients, 
-            instructions=cleaned_steps, 
+            "recipeDetails.html",
+            meal=meal,
+            ingredients=ingredients,
+            instructions=cleaned_steps,
             pro_tips=pro_tips,
             cook_label=cook_label,
-            prep_label=prep_label
+            prep_label=prep_label,
         )
     except Exception as e:
         print(f"Error fetching recipe details: {e}")
 
-    return redirect(url_for('search_recipes'))
+    return redirect(url_for("search_recipes"))
 
 
-# 4. Route Country read from SQLite local
-@app.route('/recipes/flag')
+# Recipes by Flag
+@app.route("/recipes/flag")
 def recipes_by_flag():
-    selected_area = request.args.get('area', 'Canadian').strip()
-    page = int(request.args.get('page', 1))
+    selected_area = request.args.get("area", "Canadian").strip()
+    page = int(request.args.get("page", 1))
     limit = 15
     fetch_limit = page * limit
     offset = 0
@@ -512,112 +566,125 @@ def recipes_by_flag():
 
     countries = get_countries_from_db()
     country_info = countries.get(selected_area, {})
-    search_name = country_info.get('name', selected_area)
+    search_name = country_info.get("name", selected_area)
 
     try:
         conn = get_db_connection()
-        # Take 15 recipes of each country from CSDL local
-        if selected_area.lower() == 'international':
-            total_count = conn.execute('''
+        if selected_area.lower() == "international":
+            total_count = conn.execute("""
                 SELECT COUNT(*) FROM recipe_cache 
                 WHERE area IS NULL OR area = '' OR area = 'Unknown' OR area = 'International'
-            ''').fetchone()[0]
+            """).fetchone()[0]
 
-            rows = conn.execute('''
+            rows = conn.execute(
+                """
                 SELECT raw_data, dietary_tags FROM recipe_cache 
                 WHERE area IS NULL OR area = '' OR area = 'Unknown' OR area = 'International'
                 LIMIT ? OFFSET ?
-            ''', (fetch_limit + 1, offset)).fetchall()
+            """,
+                (fetch_limit + 1, offset),
+            ).fetchall()
         else:
-            total_count = conn.execute('''
+            total_count = conn.execute(
+                """
                 SELECT COUNT(*) FROM recipe_cache 
                 WHERE area LIKE ? OR area LIKE ?
-            ''', (f'%{selected_area}%', f'%{search_name}%')).fetchone()[0]
+            """,
+                (f"%{selected_area}%", f"%{search_name}%"),
+            ).fetchone()[0]
 
-            rows = conn.execute('''
+            rows = conn.execute(
+                """
                 SELECT raw_data, dietary_tags FROM recipe_cache
                 WHERE area LIKE ? OR area LIKE ?
                 LIMIT ? OFFSET ?
-            ''', (f'%{selected_area}%', f'%{search_name}%', fetch_limit + 1, offset)).fetchall()
-            
+            """,
+                (f"%{selected_area}%", f"%{search_name}%", fetch_limit + 1, offset),
+            ).fetchall()
+
         conn.close()
 
         has_more = len(rows) > fetch_limit
         display_rows = rows[:fetch_limit]
 
         for row in display_rows:
-            meal_data = json.loads(row['raw_data'])
-            raw_instructions = meal_data.get('strInstructions', '')
-            meal_data['cook_label'] = get_cooking_label(raw_instructions)
-            meal_data['prep_label'] = get_prep_label(meal_data)
+            meal_data = json.loads(row["raw_data"])
+            raw_instructions = meal_data.get("strInstructions", "")
+            meal_data["cook_label"] = get_cooking_label(raw_instructions)
+            meal_data["prep_label"] = get_prep_label(meal_data)
             meals.append(meal_data)
     except Exception as e:
         print(f"Error fetching area meals from DB: {e}")
         has_more = False
         total_count = 0
 
-    return render_template('recipesFlag.html', 
-                           meals=meals, 
-                           countries=countries, 
-                           selected_area=selected_area,
-                           page=page,
-                           has_more=has_more,
-                           total_count=total_count)
+    return render_template(
+        "recipesFlag.html",
+        meals=meals,
+        countries=countries,
+        selected_area=selected_area,
+        page=page,
+        has_more=has_more,
+        total_count=total_count,
+    )
 
 
-# 5. Dietary Profile
-@app.route('/profile', methods=['GET', 'POST'])
+# Dietary Profile
+@app.route("/profile", methods=["GET", "POST"])
 @login_required
 def profile():
-
-    # Group the 16 dietary tags into 4 functional categories
     DIET_CATEGORIES = {
         "Dietary Lifestyle": ["Vegetarian", "Vegan"],
         "Religious & Health": ["Halal", "Kosher", "Low-Sodium"],
         "Allergens": [
-            "Dairy-Free", "Gluten-Free", "Wheat-Free", 
-            "Nut-Free", "Soy-Free", "Egg-Free", "Sesame-Free"
+            "Dairy-Free",
+            "Gluten-Free",
+            "Wheat-Free",
+            "Nut-Free",
+            "Soy-Free",
+            "Egg-Free",
+            "Sesame-Free",
         ],
         "Meat Restrictions": [
-            "Fish-Free", "Shellfish-Free", "No Pork", "No Beef"
-        ]
+            "Fish-Free",
+            "Shellfish-Free",
+            "No Pork",
+            "No Beef",
+        ],
     }
 
-    # Create a flat list of all dietary restrictions from the categories
-    restrictions_list = [tag for tags in DIET_CATEGORIES.values() for tag in tags]
+    restrictions_list = [
+        tag for tags in DIET_CATEGORIES.values() for tag in tags
+    ]
 
     conn = get_db_connection()
 
-    if request.method == 'POST':
+    if request.method == "POST":
+        first_name = request.form.get("first_name", "").strip()
+        last_name = request.form.get("last_name", "").strip()
 
-        # Get personal information
-        first_name = request.form.get('first_name', '').strip()
-        last_name = request.form.get('last_name', '').strip()
-
-        # Get dietary information
-        selected = request.form.getlist('restrictions')
+        selected = request.form.getlist("restrictions")
         selected = [r for r in selected if r in restrictions_list]
 
-        restrictions_string = ','.join(selected)
+        restrictions_string = ",".join(selected)
 
         ingredients_to_avoid = request.form.get(
-            'ingredients_to_avoid', ''
+            "ingredients_to_avoid", ""
         ).strip()
+        dietary_notes = request.form.get("dietary_notes", "").strip()
 
-        dietary_notes = request.form.get(
-            'dietary_notes', ''
-        ).strip()
-
-        # Update the user's personal information
         if first_name or last_name:
-            conn.execute('''
+            conn.execute(
+                """
                 UPDATE user
                 SET first_name = ?, last_name = ?
                 WHERE id = ?
-            ''', (first_name, last_name, current_user.id))
+            """,
+                (first_name, last_name, current_user.id),
+            )
 
-        # Save or update dietary information
-        conn.execute('''
+        conn.execute(
+            """
             INSERT INTO dietary_profile (
                 user_id,
                 restrictions,
@@ -631,119 +698,132 @@ def profile():
                 restrictions = excluded.restrictions,
                 ingredients_to_avoid = excluded.ingredients_to_avoid,
                 dietary_notes = excluded.dietary_notes
-
-        ''', (
-            current_user.id,
-            restrictions_string,
-            ingredients_to_avoid,
-            dietary_notes
-        ))
+        """,
+            (
+                current_user.id,
+                restrictions_string,
+                ingredients_to_avoid,
+                dietary_notes,
+            ),
+        )
 
         conn.commit()
         conn.close()
 
-        flash('Your profile has been updated successfully!', 'success')
+        flash("Your profile has been updated successfully!", "success")
+        return redirect(url_for("profile"))
 
-        return redirect(url_for('profile'))
-
-    # Retrieve personal information
-    user = conn.execute('''
+    user = conn.execute(
+        """
         SELECT first_name, last_name, email
         FROM user
         WHERE id = ?
-    ''', (current_user.id,)).fetchone()
+    """,
+        (current_user.id,),
+    ).fetchone()
 
-    # Retrieve dietary information
-    saved_profile = conn.execute('''
+    saved_profile = conn.execute(
+        """
         SELECT restrictions, ingredients_to_avoid, dietary_notes
         FROM dietary_profile
         WHERE user_id = ?
-    ''', (current_user.id,)).fetchone()
+    """,
+        (current_user.id,),
+    ).fetchone()
 
     conn.close()
 
     selected_restrictions = []
-    ingredients_to_avoid = ''
-    dietary_notes = ''
+    ingredients_to_avoid = ""
+    dietary_notes = ""
 
     if saved_profile:
-        if 'restrictions' in saved_profile.keys() and saved_profile['restrictions']:
-            selected_restrictions = saved_profile['restrictions'].split(',')
+        if (
+            "restrictions" in saved_profile.keys()
+            and saved_profile["restrictions"]
+        ):
+            selected_restrictions = saved_profile["restrictions"].split(",")
 
-        if 'ingredients_to_avoid' in saved_profile.keys():
-            ingredients_to_avoid = saved_profile['ingredients_to_avoid'] or ''
+        if "ingredients_to_avoid" in saved_profile.keys():
+            ingredients_to_avoid = saved_profile["ingredients_to_avoid"] or ""
 
-        if 'dietary_notes' in saved_profile.keys():
-            dietary_notes = saved_profile['dietary_notes'] or ''
-            
+        if "dietary_notes" in saved_profile.keys():
+            dietary_notes = saved_profile["dietary_notes"] or ""
+
     return render_template(
-        'profile.html',
+        "profile.html",
         restrictions_list=restrictions_list,
         selected_restrictions=selected_restrictions,
-        first_name=user['first_name'] if user and 'first_name' in user.keys() else '',
-        last_name=user['last_name'] if user and 'last_name' in user.keys() else '',
-        email=user['email'] if user else '',
+        first_name=(
+            user["first_name"] if user and "first_name" in user.keys() else ""
+        ),
+        last_name=(
+            user["last_name"] if user and "last_name" in user.keys() else ""
+        ),
+        email=user["email"] if user else "",
         ingredients_to_avoid=ingredients_to_avoid,
-        dietary_notes=dietary_notes
+        dietary_notes=dietary_notes,
     )
 
-# Watch all ingredient for each Diet Meals
-@app.route('/diet-ingredients/<diet_name>')
+
+# Watch ingredients for Diet
+@app.route("/diet-ingredients/<diet_name>")
 def diet_ingredients_detail(diet_name):
     diet_ingredients = {}
 
-    # Read file JSON:
-    ingredients_path = os.path.join(app.static_folder, 'diet_ingredients.json')
+    ingredients_path = os.path.join(app.static_folder, "diet_ingredients.json")
     if os.path.exists(ingredients_path):
-        with open(ingredients_path, 'r', encoding='utf-8') as f:
+        with open(ingredients_path, "r", encoding="utf-8") as f:
             diet_ingredients = json.load(f)
 
-    # Take list of Diet 
     ingredients_list = diet_ingredients.get(diet_name, [])
 
     return render_template(
-        'dietIngredients.html', 
-        diet_name=diet_name, 
-        ingredients=ingredients_list
+        "dietIngredients.html",
+        diet_name=diet_name,
+        ingredients=ingredients_list,
     )
+
+
+# 6. Grocery Search (read from SQLite safeplate.db)
 @app.route("/grocery")
 def grocery_search():
     query = request.args.get("q", "").strip()
     products = []
 
-    if query:
-        # Call the Open Food Facts API Search directly based on the user's input keyword
-        url = f"https://world.openfoodfacts.org/cgi/search.pl?search_terms={query}&search_simple=1&action=process&json=1&page_size=24"
-        try:
-            response = requests.get(url, timeout=5)
-            if response.status_code == 200:
-                data = response.json()
-                raw_products = data.get("products", [])
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
-                # Filter out the necessary information
-                for p in raw_products:
-                    products.append(
-                        {
-                            "code": p.get("code"),
-                            "product_name": p.get("product_name")
-                            or p.get("product_name_en")
-                            or "Unknown Product",
-                            "brands": p.get("brands", "N/A"),
-                            "image_url": p.get("image_front_small_url")
-                            or p.get("image_url", ""),
-                            "allergens": ", ".join(
-                                p.get("allergens_tags", [])
-                            ).replace("en:", ""),
-                            "labels": ", ".join(
-                                p.get("labels_tags", [])
-                            ).replace("en:", ""),
-                        }
-                    )
-        except Exception as e:
-            print(f"API connection error: {e}")
+    if query:
+        # Search for products by product name or brand in SQLite
+        db_rows = cursor.execute(
+            """
+            SELECT code, product_name, brands, allergens_tags AS allergens, labels_tags AS labels, image_url
+            FROM grocery_products
+            WHERE product_name LIKE ? OR brands LIKE ?
+            LIMIT 50
+        """,
+            (f"%{query}%", f"%{query}%"),
+        ).fetchall()
+    else:
+        # If no search query, display 24 sample products with images by default
+        db_rows = cursor.execute(
+            """
+            SELECT code, product_name, brands, allergens_tags AS allergens, labels_tags AS labels, image_url
+            FROM grocery_products
+            WHERE image_url != '' AND image_url IS NOT NULL
+            LIMIT 24
+        """
+        ).fetchall()
+
+    conn.close()
+
+    for row in db_rows:
+        products.append(dict(row))
 
     return render_template("grocery.html", products=products, query=query)
 
-if __name__ == '__main__':
-    init_db()  # Automatically run the database initialization when the application launches
+
+if __name__ == "__main__":
+    init_db()  # Automatically create tables & indexes if they don't exist
     app.run(debug=True)
