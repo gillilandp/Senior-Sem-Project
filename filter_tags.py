@@ -1,4 +1,3 @@
-
 import sqlite3
 import json
 import re
@@ -27,15 +26,12 @@ def check_dietary_labels(meal):
 
     # 1. Collect and normalize ingredients
     ingredients = []
-
     for i in range(1, 21):
         ing = meal.get(f'strIngredient{i}')
-
         if ing and ing.strip():
             ingredients.append(ing.strip().lower())
 
     category = (meal.get('strCategory') or '').strip().lower()
-
     labels = []
 
     # 2. Meat and animal-derived ingredients
@@ -63,10 +59,9 @@ def check_dietary_labels(meal):
         'parmesan', 'mozzarella', 'cheddar', 'feta',
         'brie', 'camembert', 'ricotta', 'mascarpone',
         'paneer', 'gouda', 'gruyere', 'pecorino',
-        'parmigiano-reggiano'
+        'parmigiano-reggiano', 'puff pastry'
     ]
 
-    # Plant-based alternatives that should not count as dairy
     plant_milk_keywords = [
         'coconut milk', 'almond milk', 'soy milk',
         'soya milk', 'oat milk', 'rice milk',
@@ -75,35 +70,24 @@ def check_dietary_labels(meal):
 
     def has_dairy():
         for ingredient in ingredients:
-
-            # Remove plant-based milk names before checking dairy
             clean_ingredient = ingredient
-
             for plant_milk in plant_milk_keywords:
                 clean_ingredient = re.sub(
-                    r'(?<![a-z0-9])' + re.escape(plant_milk) +
-                    r'(?![a-z0-9])',
+                    r'(?<![a-z0-9])' + re.escape(plant_milk) + r'(?![a-z0-9])',
                     '',
                     clean_ingredient
                 )
-
-            # Peanut butter is not dairy butter
             clean_ingredient = re.sub(
                 r'(?<![a-z0-9])peanut butter(?![a-z0-9])',
                 '',
                 clean_ingredient
             )
-
             if contains_any([clean_ingredient], dairy_keywords):
                 return True
-
         return False
 
     # 4. Vegetarian
-    meat_categories = [
-        'beef', 'chicken', 'pork', 'lamb', 'seafood'
-    ]
-
+    meat_categories = ['beef', 'chicken', 'pork', 'lamb', 'seafood']
     has_meat = (
         contains_any(ingredients, meat_keywords)
         or category in meat_categories
@@ -115,15 +99,15 @@ def check_dietary_labels(meal):
     # 5. Vegan
     non_vegan_keywords = [
         'egg', 'eggs', 'egg white', 'egg yolk', 'free-range egg', 'free-range eggs',
-        'honey', 'royal jelly', 'gelatin', 'whey', 'casein', 'mayonnaise',
+        'honey', 'royal jelly', 'gelatin', 'whey', 'casein', 'mayonnaise', 'mayo',
         'meringue', 'lard', 'tallow', 'chicken stock', 'beef stock',
         'bone broth', 'fish sauce', 'oyster sauce', 'shrimp paste', 'carmine'
     ]
 
-    # Vegan mayonnaise is an exception
+    # Ignore vegan mayonnaise / vegan mayo when checking vegan status
     non_vegan_ingredients = [
         ing for ing in ingredients
-        if not re.search(r'\bvegan mayonnaise\b', ing)
+        if not re.search(r'\bvegan (mayonnaise|mayo)\b', ing)
     ]
 
     has_non_vegan = (
@@ -156,7 +140,6 @@ def check_dietary_labels(meal):
         'wheat tortilla', 'flour tortilla',
         'soy sauce', 'dark soy sauce'
     ]
-
     if not contains_any(ingredients, gluten_keywords):
         labels.append('Gluten-Free')
 
@@ -171,13 +154,10 @@ def check_dietary_labels(meal):
         'almond milk', 'cashew cream',
         'marzipan', 'praline'
     ]
-
-    # Nutmeg is not classified as a tree nut or peanut
     nut_ingredients = [
         ing for ing in ingredients
         if not re.search(r'\bnutmeg\b', ing)
     ]
-
     if not contains_any(nut_ingredients, nut_keywords):
         labels.append('Nut-Free')
 
@@ -190,7 +170,6 @@ def check_dietary_labels(meal):
         'soy flour', 'soybean', 'tempeh',
         'textured vegetable protein'
     ]
-
     if not contains_any(ingredients, soy_keywords):
         labels.append('Soy-Free')
 
@@ -207,16 +186,20 @@ def check_dietary_labels(meal):
     if not has_haram:
         labels.append('Halal')
 
-    # 11. Kosher (Avoid pork, pork fat, and shellfish)
+    # 11. Kosher (Avoid pork, shellfish, AND mixing Meat + Dairy)
     non_kosher_keywords = [
         'pork', 'bacon', 'ham', 'parma ham', 'chorizo', 'lard', 
         'shrimp', 'prawn', 'prawns', 'king prawns', 'raw king prawns', 
         'crab', 'lobster', 'mussel', 'mussels', 'squid', 'octopus', 
         'oyster', 'oysters', 'oyster sauce', 'shrimp paste'
     ]
+    # Luật Kosher cấm trộn lẫn Thịt và Sữa
+    is_meat_and_dairy_mix = has_meat and has_dairy()
+
     has_non_kosher = (
         contains_any(ingredients, non_kosher_keywords)
         or category in ['pork', 'seafood']
+        or is_meat_and_dairy_mix
     )
     if not has_non_kosher:
         labels.append('Kosher')
@@ -233,44 +216,93 @@ def check_dietary_labels(meal):
     if not contains_any(ingredients, high_sodium_keywords):
         labels.append('Low-Sodium')
 
+    # 13. Egg-Free (No eggs or egg sauces)
+    egg_keywords = [
+        'egg', 'eggs', 'egg white', 'egg whites', 'egg yolk', 'egg yolks',
+        'free-range egg', 'free-range eggs', 'mayonnaise', 'mayo', 'sriracha mayo',
+        'meringue', 'meringue nests', 'flax eggs', 'egg wash', 'custard', 'aioli', 
+        'puff pastry'
+    ]
+    # Avoid the vegan mayo / vegan mayonnaise
+    egg_ingredients = [
+        ing for ing in ingredients 
+        if not re.search(r'\bvegan (mayonnaise|mayo)\b', ing)
+    ]
+    if not contains_any(egg_ingredients, egg_keywords):
+        labels.append('Egg-Free')
+
+    # 14. Wheat-Free (No wheat)
+    wheat_keywords = [
+        'wheat', 'wheat flour', 'bread flour', 'plain flour', 'all-purpose flour',
+        'self-raising flour', 'strong flour', 'whole wheat', 'breadcrumbs', 
+        'bread crumbs', 'panko', 'spaghetti', 'pasta', 'macaroni', 'lasagne', 
+        'farfalle', 'penne', 'rigatoni', 'vermicelli', 'wheat tortilla', 'flour tortilla'
+    ]
+    if not contains_any(ingredients, wheat_keywords):
+        labels.append('Wheat-Free')
+
+    # 15. Sesame-Free (No sesame)
+    sesame_keywords = [
+        'sesame', 'sesame seed', 'sesame seeds', 'sesame oil', 'tahini'
+    ]
+    if not contains_any(ingredients, sesame_keywords):
+        labels.append('Sesame-Free')
+
+    # 16. Fish-Free (No fish)
+    fish_keywords = [
+        'fish', 'salmon', 'tuna', 'mackerel', 'anchovies', 'sardines', 
+        'white fish', 'white fish fillets', 'monkfish', 'pilchards', 
+        'fish stock', 'fish sauce', 'thai fish sauce'
+    ]
+    if not contains_any(ingredients, fish_keywords):
+        labels.append('Fish-Free')
+
+    # 17. Shellfish-Free (No shellfish)
+    shellfish_keywords = [
+        'prawn', 'prawns', 'king prawns', 'raw king prawns', 'shrimp', 
+        'crab', 'lobster', 'squid', 'baby squid', 'octopus', 'mussel', 
+        'mussels', 'oyster', 'oysters', 'oyster sauce', 'shrimp paste'
+    ]
+    if not contains_any(ingredients, shellfish_keywords):
+        labels.append('Shellfish-Free')
+
+    # 18. No Pork (No pork)
+    pork_keywords = ['pork', 'bacon', 'ham', 'parma ham', 'chorizo', 'lard']
+    has_pork = contains_any(ingredients, pork_keywords) or category == 'pork'
+    if not has_pork:
+        labels.append('No Pork')
+
+    # 19. No Beef (No beef)
+    beef_keywords = [
+        'beef', 'beef brisket', 'beef fillet', 'beef gravy', 'beef stock', 
+        'hot beef stock', 'lean minced beef', 'minced beef'
+    ]
+    has_beef = contains_any(ingredients, beef_keywords) or category == 'beef'
+    if not has_beef:
+        labels.append('No Beef')
+
     return ",".join(labels)
 
 
 def process_and_update_db():
     conn = get_db_connection()
-
     try:
         cursor = conn.cursor()
-
-        # 1. Check whether dietary_tags already exists
-        columns = cursor.execute(
-            "PRAGMA table_info(recipe_cache)"
-        ).fetchall()
-
+        columns = cursor.execute("PRAGMA table_info(recipe_cache)").fetchall()
         column_names = [col['name'] for col in columns]
 
         if 'dietary_tags' not in column_names:
-            cursor.execute(
-                "ALTER TABLE recipe_cache ADD COLUMN dietary_tags TEXT"
-            )
+            cursor.execute("ALTER TABLE recipe_cache ADD COLUMN dietary_tags TEXT")
             print("-> Added 'dietary_tags' column.")
   
-        # 2. Read recipes from database
-        rows = cursor.execute(
-            "SELECT meal_id, raw_data FROM recipe_cache"
-        ).fetchall()
-
+        rows = cursor.execute("SELECT meal_id, raw_data FROM recipe_cache").fetchall()
         count = 0
 
-        # 3. Classify and update each recipe
         for row in rows:
             meal_id = row['meal_id']
-
             try:
                 meal = json.loads(row['raw_data'])
-
                 tags = check_dietary_labels(meal)
-
                 cursor.execute(
                     """
                     UPDATE recipe_cache
@@ -279,24 +311,16 @@ def process_and_update_db():
                     """,
                     (tags, meal_id)
                 )
-
                 count += 1
-
             except (json.JSONDecodeError, TypeError) as error:
                 print(f"-> Error processing meal {meal_id}: {error}")
 
-        # 4. Save changes
         conn.commit()
-
-        print(
-            f" DONE! Successfully updated dietary tags "
-            f"for {count} recipes in safeplate.db."
-        )
+        print(f" DONE! Successfully updated dietary tags for {count} recipes in safeplate.db.")
 
     except Exception:
         conn.rollback()
         raise
-
     finally:
         conn.close()
 

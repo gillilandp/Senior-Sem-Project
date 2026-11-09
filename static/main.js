@@ -231,14 +231,13 @@ document.addEventListener("DOMContentLoaded", function () {
         const loadMoreButton = document.getElementById('load-more-button');
         if (!loadMoreButton) return;
 
-        // Xóa các event cũ để tránh bị gắn lặp
-        const newBtn = loadMoreButton.cloneNode(true);
-        loadMoreButton.parentNode.replaceChild(newBtn, loadMoreButton);
+        // Delete old events to avoid duplicate bindings
+        const newButton = loadMoreButton.cloneNode(true);
+        loadMoreButton.parentNode.replaceChild(newButton, loadMoreButton);
 
-        const urlParams = new URLSearchParams(window.location.search);
-        let currentPage = parseInt(urlParams.get('page')) || 1;
-
-        newBtn.addEventListener('click', function () {
+        newButton.addEventListener('click', function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            let currentPage = parseInt(urlParams.get('page')) || 1;
             currentPage++;
 
             const currentParams = new URLSearchParams(window.location.search);
@@ -248,8 +247,8 @@ document.addEventListener("DOMContentLoaded", function () {
             url.search = currentParams.toString();
             const newUrl = url.pathname + url.search;
 
-            newBtn.classList.add('loading');
-            newBtn.disabled = true;
+            newButton.classList.add('loading');
+            newButton.disabled = true;
 
             fetch(newUrl)
                 .then(response => response.text())
@@ -257,7 +256,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(html, 'text/html');
 
-                    // Lấy toàn bộ card mới từ trang vừa fetch về
+                    // Get all new cards from the fetched page
                     let newCards = doc.querySelectorAll('#recipe-container .recipe-card-link');
                     const container = document.getElementById('recipe-container');
 
@@ -272,29 +271,32 @@ document.addEventListener("DOMContentLoaded", function () {
 
                         window.history.replaceState({ page: currentPage }, '', newUrl);
 
-                        // Cập nhật khung chứa nút Load More bằng HTML mới vừa fetch
+                        // Update the Load More button wrapper with the newly fetched HTML
                         const newLoadMoreWrapper = doc.querySelector('.load-more-wrapper');
                         const currentLoadMoreWrapper = document.querySelector('.load-more-wrapper');
                         if (newLoadMoreWrapper && currentLoadMoreWrapper) {
                             currentLoadMoreWrapper.innerHTML = newLoadMoreWrapper.innerHTML;
-                            // Re-init listener cho nút Load More mới
+                            // Re-init listener for the new Load More button
                             initLoadMore();
                         }
                     } else {
-                        newBtn.parentElement.innerHTML = '<div class="reached-end-badge"><span class="end-icon">✨</span><span>You\'ve reached the end of the list!</span></div>';
+                        const currentLoadMoreWrapper = document.querySelector('.load-more-wrapper');
+                        if (currentLoadMoreWrapper) {
+                            currentLoadMoreWrapper.innerHTML = '<div class="reached-end-badge"><span class="end-icon">✨</span><span>You\'ve reached the end of the list!</span></div>';
+                        }
                     }
                 })
                 .catch(err => {
                     console.error("Error loading more recipes:", err);
-                    newBtn.classList.remove('loading');
-                    newBtn.disabled = false;
+                    newButton.classList.remove('loading');
+                    newButton.disabled = false;
                 });
         });
     }
 
     initLoadMore();
 
-    // 5) Save the state before click on card
+    // 5) Save the state before clicking on a card
     document.addEventListener("click", function (e) {
         const Link = e.target.closest("a, .recipe-card-link, .button-primary");
         if (Link) {
@@ -340,6 +342,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         matchInput.checked = false;
                     }
                 }
+
             });
         });
     }

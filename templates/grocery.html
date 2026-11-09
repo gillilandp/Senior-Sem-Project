@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Grocery Products - SafePlate{% endblock %}
+
+{% block content %}
+<section class="recipes-search-hero">
+    <div class="search-bar-container">
+        <span class="sub-caption">GROCERY & BRAND FINDER</span>
+        <h1 class="hero-title" style="font-size: 32px;">Search Safe Packaged Foods</h1>
+        <p class="section-subtitle">Find brands and packaged ingredients (Oat Milk, Soy Sauce, Snacks...) powered by
+            Open Food Facts.</p>
+
+        <form action="{{ url_for('grocery_search') }}" method="GET" style="margin-top: 20px;">
+            <div class="search-input-wrapper">
+                <span class="search-icon">🔍</span>
+                <input type="text" name="q" value="{{ query }}"
+                    placeholder="Search by brand or product name (e.g. Oatly, Oat Milk, Mayo...)" required>
+                <button type="submit" class="button-primary" style="border:none; cursor:pointer;">Search</button>
+            </div>
+        </form>
+    </div>
+</section>
+
+<section class="recipes-results-section">
+    {% if query %}
+    <div class="results-info">
+        <h2>Results for "{{ query }}"</h2>
+        <span>Found {{ products|length }} items</span>
+    </div>
+    {% endif %}
+
+    {% if products %}
+    <div class="recipes-grid-layout">
+        {% for item in products %}
+        <div class="recipe-card-detailed">
+            <div class="card-img-wrapper"
+                style="display:flex; align-items:center; justify-content:center; background:#f8fafc;">
+                {% if item.image_url %}
+                <img src="{{ item.image_url }}" alt="{{ item.product_name }}"
+                    style="object-fit:contain; max-height:170px;">
+                {% else %}
+                <div style="font-size:40px;">📦</div>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <span class="sub-caption">{{ item.brands }}</span>
+                <h3 class="recipe-name" style="min-height: 48px; margin-bottom: 8px; font-size: 15px;">{{
+                    item.product_name }}</h3>
+
+                <div class="recipe-meta" style="margin-top:auto;">
+                    {% if item.labels %}
+                    <p style="font-size: 11px; color: #2e7d32; margin-bottom: 4px;"><strong>Labels:</strong> {{
+                        item.labels[:50] }}{% if item.labels|length > 50 %}...{% endif %}</p>
+                    {% endif %}
+                    {% if item.allergens %}
+                    <p style="font-size: 11px; color: #c62828;"><strong>Allergens:</strong> {{ item.allergens }}</p>
+                    {% else %}
+                    <p style="font-size: 11px; color: #718096;"><strong>Allergens:</strong> No allergens listed</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% elif query %}
+    <div class="no-results">
+        <div class="no-results-icon">🔍</div>
+        <h3>No products found</h3>
+        <p>Try searching for another brand or product keyword.</p>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

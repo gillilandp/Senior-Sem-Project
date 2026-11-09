@@ -151,5 +151,124 @@
             "Canned Soups & Cured Meats (Bacon)",
             "Pickles & Processed Cheese"
         ]
+    },
+    "Egg-Free": {
+        "title": "Egg-Free Diet",
+        "icon": "🥚",
+        "for_who": "Individuals with Egg Allergy or Sensitivity.",
+        "safe_foods": [
+            "Meat & Poultry",
+            "Fish & Seafood",
+            "Fresh Vegetables & Fruits",
+            "Whole Grains & Rice"
+        ],
+        "avoid_foods": [
+            "Eggs & Egg Whites",
+            "Mayonnaise",
+            "Meringue & Custard",
+            "Baked goods containing eggs"
+        ]
+    },
+    "Wheat-Free": {
+        "title": "Wheat-Free Diet",
+        "icon": "🌾",
+        "for_who": "People with Wheat Allergy or Wheat Sensitivity.",
+        "safe_foods": [
+            "Rice, Corn, Oats",
+            "Quinoa & Buckwheat",
+            "Potatoes & Tapioca",
+            "Fresh Meat, Fish & Vegetables"
+        ],
+        "avoid_foods": [
+            "Wheat & Wheat Flour",
+            "Traditional Bread & Pastries",
+            "Wheat Pasta & Noodles",
+            "Couscous & Semolina"
+        ]
+    },
+    "Sesame-Free": {
+        "title": "Sesame-Free Diet",
+        "icon": "🌱",
+        "for_who": "Individuals allergic to sesame seeds or sesame oils.",
+        "safe_foods": [
+            "Olive & Sunflower Oil",
+            "Nuts & Other Seeds",
+            "Meat, Fish & Vegetables",
+            "Grains & Rice"
+        ],
+        "avoid_foods": [
+            "Sesame Seeds",
+            "Sesame Oil & Toasted Sesame Oil",
+            "Tahini Paste",
+            "Hummus containing Tahini"
+        ]
+    },
+    "Fish-Free": {
+        "title": "Fish-Free Diet",
+        "icon": "🐟",
+        "for_who": "Individuals with Finfish allergy.",
+        "safe_foods": [
+            "Meat & Poultry",
+            "Dairy & Eggs",
+            "Fresh Vegetables & Fruits",
+            "Grains & Beans"
+        ],
+        "avoid_foods": [
+            "Salmon, Tuna, Cod, Mackerel",
+            "Anchovies & Sardines",
+            "Fish Sauce & Thai Fish Sauce",
+            "Fish Stock / Broth"
+        ]
+    },
+    "Shellfish-Free": {
+        "title": "Shellfish-Free Diet",
+        "icon": "🦐",
+        "for_who": "Individuals with Shellfish/Crustacean allergy.",
+        "safe_foods": [
+            "Meat & Poultry",
+            "Finfish (Salmon, Tuna)",
+            "Vegetables & Fruits",
+            "Grains & Dairy"
+        ],
+        "avoid_foods": [
+            "Shrimp, Prawns & Crab",
+            "Lobster & Crayfish",
+            "Squid & Octopus",
+            "Oyster Sauce & Shrimp Paste"
+        ]
+    },
+    "No Pork": {
+        "title": "No Pork Diet",
+        "icon": "🚫🐷",
+        "for_who": "People who avoid pork for religious, cultural, or personal reasons.",
+        "safe_foods": [
+            "Beef & Lamb",
+            "Chicken & Turkey",
+            "Fish & Seafood",
+            "Vegetables & Grains"
+        ],
+        "avoid_foods": [
+            "Pork, Bacon & Ham",
+            "Parma Ham & Chorizo",
+            "Pork Lard & Pork Fat",
+            "Gelatin from Pork"
+        ]
+    },
+    "No Beef": {
+        "title": "No Beef Diet",
+        "icon": "🚫🐮",
+        "for_who": "People who avoid beef for religious, cultural, or dietary reasons.",
+        "safe_foods": [
+            "Chicken & Turkey",
+            "Pork & Lamb",
+            "Fish & Seafood",
+            "Vegetables & Grains"
+        ],
+        "avoid_foods": [
+            "Beef & Beef Brisket",
+            "Minced Beef & Beef Fillet",
+            "Beef Gravy & Beef Stock",
+            "Hot Beef Stock Cubes"
+        ]
     }
 }
