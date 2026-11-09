@@ -25,17 +25,45 @@
                 <a href="{{ url_for('home') }}#profile-setup-section" class="dropdown-toggle">
                     Diet Guides <span class="arrow-down">&#9662;</span>
                 </a>
-                <div class="dropdown-menu">
+                <div class="dropdown-menu dropdown-menu-nested">
                     <div class="dropdown-header">DIETARY GUIDES</div>
-                    <a href="{{ url_for('search_recipes') }}?diet=Gluten-Free">🍚 Gluten-Free Guide</a>
-                    <a href="{{ url_for('search_recipes') }}?diet=Dairy-Free">🥛 Dairy-Free Guide</a>
-                    <a href="{{ url_for('search_recipes') }}?diet=Vegan">🥬 Vegan Guide</a>
-                    <a href="{{ url_for('search_recipes') }}?diet=Vegetarian">🥗 Vegetarian Guide</a>
-                    <a href="{{ url_for('search_recipes') }}?diet=Nut-Free">🌰 Nut-Free Guide</a>
-                    <a href="{{ url_for('search_recipes') }}?diet=Soy-Free">🫘 Soy-Free Guide</a>
-                    <a href="{{ url_for('search_recipes') }}?diet=Halal">🧆 Halal Guide</a>
-                    <a href="{{ url_for('search_recipes') }}?diet=Kosher">🥯 Kosher Guide</a>
-                    <a href="{{ url_for('search_recipes') }}?diet=Low-Sodium">🧂 Low-Sodium Guide</a>
+
+                    <!-- group 1: Diet & Health -->
+                    <div class="submenu-item">
+                        <a href="#" class="submenu-toggle">🥗 Diet & Health <span class="arrow-right">&#9656;</span></a>
+                        <div class="submenu-content">
+                            <a href="{{ url_for('search_recipes') }}?diet=Vegetarian">🥗 Vegetarian Guide</a>
+                            <a href="{{ url_for('search_recipes') }}?diet=Vegan">🥬 Vegan Guide</a>
+                            <a href="{{ url_for('search_recipes') }}?diet=Halal">🧆 Halal Guide</a>
+                            <a href="{{ url_for('search_recipes') }}?diet=Kosher">🥯 Kosher Guide</a>
+                            <a href="{{ url_for('search_recipes') }}?diet=Low-Sodium">🧂 Low-Sodium Guide</a>
+                        </div>
+                    </div>
+
+                    <!-- group 2: Allergens -->
+                    <div class="submenu-item">
+                        <a href="#" class="submenu-toggle">🥛 Allergens <span class="arrow-right">&#9656;</span></a>
+                        <div class="submenu-content">
+                            <a href="{{ url_for('search_recipes') }}?diet=Dairy-Free">🥛 Dairy-Free Guide</a>
+                            <a href="{{ url_for('search_recipes') }}?diet=Gluten-Free">🍚 Gluten-Free Guide</a>
+                            <a href="{{ url_for('search_recipes') }}?diet=Wheat-Free">🌾 Wheat-Free Guide</a>
+                            <a href="{{ url_for('search_recipes') }}?diet=Nut-Free">🌰 Nut-Free Guide</a>
+                            <a href="{{ url_for('search_recipes') }}?diet=Soy-Free">🫘 Soy-Free Guide</a>
+                            <a href="{{ url_for('search_recipes') }}?diet=Egg-Free">🥚 Egg-Free Guide</a>
+                            <a href="{{ url_for('search_recipes') }}?diet=Sesame-Free">🌱 Sesame-Free Guide</a>
+                        </div>
+                    </div>
+
+                    <!-- group 3: Avoid Meat -->
+                    <div class="submenu-item">
+                        <a href="#" class="submenu-toggle">🚫 Avoid Meat <span class="arrow-right">&#9656;</span></a>
+                        <div class="submenu-content">
+                            <a href="{{ url_for('search_recipes') }}?diet=Fish-Free">🐟 Fish-Free Guide</a>
+                            <a href="{{ url_for('search_recipes') }}?diet=Shellfish-Free">🦐 Shellfish-Free Guide</a>
+                            <a href="{{ url_for('search_recipes') }}?diet=No Pork">🚫🐷 No Pork Guide</a>
+                            <a href="{{ url_for('search_recipes') }}?diet=No Beef">🚫🐮 No Beef Guide</a>
+                        </div>
+                    </div>
                 </div>
             </div>
             <!-- The list for Recipes and Brand -->

@@ -19,8 +19,7 @@ from flask_login import (
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'secure-master-key-safeplate'
-
+app.config['SECRET_KEY'] = os.urandom(24)
 DB_NAME = 'safeplate.db'
 
 login_manager = LoginManager(app)
@@ -571,21 +570,21 @@ def recipes_by_flag():
 @login_required
 def profile():
 
-    restrictions_list = [
-        'Gluten-Free',
-        'Dairy-Free',
-        'Nut-Free',
-        'Soy-Free',
-        'Egg-Free',
-        'Wheat-Free',
-        'Sesame-Free',
-        'Fish-Free',
-        'Shellfish-Free',
-        'Vegan',
-        'Vegetarian',
-        'No Pork',
-        'No Beef'
-    ]   
+    # Group the 16 dietary tags into 4 functional categories
+    DIET_CATEGORIES = {
+        "Dietary Lifestyle": ["Vegetarian", "Vegan"],
+        "Religious & Health": ["Halal", "Kosher", "Low-Sodium"],
+        "Allergens": [
+            "Dairy-Free", "Gluten-Free", "Wheat-Free", 
+            "Nut-Free", "Soy-Free", "Egg-Free", "Sesame-Free"
+        ],
+        "Meat Restrictions": [
+            "Fish-Free", "Shellfish-Free", "No Pork", "No Beef"
+        ]
+    }
+
+    # Create a flat list of all dietary restrictions from the categories
+    restrictions_list = [tag for tags in DIET_CATEGORIES.values() for tag in tags]
 
     conn = get_db_connection()
 
