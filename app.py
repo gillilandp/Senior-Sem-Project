@@ -706,7 +706,43 @@ def diet_ingredients_detail(diet_name):
         diet_name=diet_name, 
         ingredients=ingredients_list
     )
+@app.route("/grocery")
+def grocery_search():
+    query = request.args.get("q", "").strip()
+    products = []
 
+    if query:
+        # Call the Open Food Facts API Search directly based on the user's input keyword
+        url = f"https://world.openfoodfacts.org/cgi/search.pl?search_terms={query}&search_simple=1&action=process&json=1&page_size=24"
+        try:
+            response = requests.get(url, timeout=5)
+            if response.status_code == 200:
+                data = response.json()
+                raw_products = data.get("products", [])
+
+                # Filter out the necessary information
+                for p in raw_products:
+                    products.append(
+                        {
+                            "code": p.get("code"),
+                            "product_name": p.get("product_name")
+                            or p.get("product_name_en")
+                            or "Unknown Product",
+                            "brands": p.get("brands", "N/A"),
+                            "image_url": p.get("image_front_small_url")
+                            or p.get("image_url", ""),
+                            "allergens": ", ".join(
+                                p.get("allergens_tags", [])
+                            ).replace("en:", ""),
+                            "labels": ", ".join(
+                                p.get("labels_tags", [])
+                            ).replace("en:", ""),
+                        }
+                    )
+        except Exception as e:
+            print(f"API connection error: {e}")
+
+    return render_template("grocery.html", products=products, query=query)
 
 if __name__ == '__main__':
     init_db()  # Automatically run the database initialization when the application launches
