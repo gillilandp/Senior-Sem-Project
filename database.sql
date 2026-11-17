@@ -115,6 +115,18 @@ CREATE TABLE products (
     FOREIGN KEY (brand_id) REFERENCES brands(brand_id) ON DELETE SET NULL
 );
 
+-- table to save products/brands
+CREATE TABLE user_saved_products_and_brands (
+    user_id INTEGER NOT NULL,
+    product_id INTEGER NOT NULL,
+    brand_id INTEGER NOT NULL,
+    saved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, product_id, brand_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE,
+    FOREIGN KEY (brand_id) REFERENCES brands(brand_id) ON DELETE CASCADE
+);
+
 -- table that links products to dietary restrictions
 CREATE TABLE product_dietary_restrictions (
     product_id INTEGER NOT NULL,
