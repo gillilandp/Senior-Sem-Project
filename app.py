@@ -7,7 +7,7 @@ import sqlite3
 from concurrent.futures import ThreadPoolExecutor
 from urllib import response
 
-from flask import Flask, flash, redirect, render_template, request, url_for
+from flask import Flask, flash, jsonify, redirect, render_template, request, url_for
 from flask_login import (
     LoginManager,
     UserMixin,
@@ -20,7 +20,7 @@ import requests
 from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.urandom(24)
+app.config['SECRET_KEY'] = os.urandom(15)
 DB_NAME = 'safeplate.db'
 
 login_manager = LoginManager(app)
@@ -74,6 +74,23 @@ def init_db():
             image_url TEXT
         )
     """)
+    # Ingredient substitutions table
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS ingredient_substitutions (
+            sub_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            original_ingredient TEXT NOT NULL,
+            substitute_ingredient TEXT NOT NULL,
+            tag_category TEXT NOT NULL,
+            diet_suitability TEXT,
+            ratio TEXT DEFAULT '1:1',
+            note TEXT,
+            image_url TEXT
+        )
+    """)
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_sub_original ON"
+        " ingredient_substitutions(original_ingredient);"
+    )
     conn.execute(
         "CREATE INDEX IF NOT EXISTS idx_grocery_name ON"
         " grocery_products(product_name);"
@@ -485,9 +502,9 @@ def recipe_detail(meal_id):
         row = conn.execute(
             "SELECT raw_data FROM recipe_cache WHERE meal_id = ?", (meal_id,)
         ).fetchone()
-        conn.close()
 
         if not row:
+            conn.close()
             return redirect(url_for("search_recipes"))
 
         meal = json.loads(row["raw_data"])
@@ -497,10 +514,28 @@ def recipe_detail(meal_id):
             ingredient = meal.get(f"strIngredient{i}")
             measure = meal.get(f"strMeasure{i}")
             if ingredient and ingredient.strip():
+                ing_name = ingredient.strip()
+
+                # 1. Query the substitution options for this ingredient from the DB
+                subs_rows = conn.execute(
+                    """
+                    SELECT substitute_ingredient, tag_category, diet_suitability, ratio, note, image_url
+                    FROM ingredient_substitutions
+                    WHERE LOWER(original_ingredient) = LOWER(?)
+                """,
+                    (ing_name,),
+                ).fetchall()
+
+                substitutions = [dict(sub) for sub in subs_rows]
+
+                # 2. Pin substitution information to each ingredient
                 ingredients.append({
-                    "name": ingredient.strip(),
+                    "name": ing_name,
                     "measure": measure.strip() if measure else "",
+                    "substitutions": substitutions,  # List of substitution options (if any)
                 })
+
+        conn.close()
 
         raw_instructions = meal.get("strInstructions", "")
         lines = (
@@ -552,7 +587,6 @@ def recipe_detail(meal_id):
         print(f"Error fetching recipe details: {e}")
 
     return redirect(url_for("search_recipes"))
-
 
 # Recipes by Flag
 @app.route("/recipes/flag")
@@ -789,40 +823,149 @@ def diet_ingredients_detail(diet_name):
 @app.route("/grocery")
 def grocery_search():
     query = request.args.get("q", "").strip()
-    products = []
+    search_type = request.args.get("type", "product").strip()  # 'product' or 'brand'
+    page = request.args.get("page", 1, type=int)
+    per_page = 15
+    offset = (page - 1) * per_page
 
     conn = get_db_connection()
     cursor = conn.cursor()
 
     if query:
-        # Search for products by product name or brand in SQLite
+        q_lower = query.lower()
+        if search_type == "brand":
+            # Find base on Brand
+            db_rows = cursor.execute(
+                """
+                SELECT code, product_name, brands, allergens_tags AS allergens, labels_tags AS labels, image_url
+                FROM grocery_products
+                WHERE LOWER(brands) LIKE ?
+                  AND brands != 'Standard Brand' AND brands != 'N/A'
+                  AND image_url != '' AND image_url IS NOT NULL
+                ORDER BY CASE WHEN LOWER(brands) LIKE ? THEN 1 ELSE 2 END
+                LIMIT ? OFFSET ?
+                """,
+                (f"%{q_lower}%", f"{q_lower}%", per_page + 1, offset),
+            ).fetchall()
+        elif search_type == "standard":
+          db_rows = cursor.execute(
+              """
+              SELECT code, product_name, brands, allergens_tags AS allergens, labels_tags AS labels, image_url
+              FROM grocery_products
+              WHERE UPPER(brands) = 'STANDARD BRAND'
+                AND (
+                    LOWER(product_name) = ?
+                    OR LOWER(product_name) LIKE ?
+                    OR LOWER(product_name) LIKE ?
+                    OR LOWER(product_name) LIKE ?
+                )
+                AND image_url != '' AND image_url IS NOT NULL
+              LIMIT ? OFFSET ?
+              """,
+              (q_lower, f"{q_lower} %", f"% {q_lower}", f"% {q_lower} %", per_page + 1, offset),
+          ).fetchall()
+        else:
+            # Find base on Product Name - match exact term to avoid noise
+            db_rows = cursor.execute(
+                """
+                SELECT code, product_name, brands, allergens_tags AS allergens, labels_tags AS labels, image_url
+                FROM grocery_products
+                WHERE (
+                    LOWER(product_name) = ?
+                    OR LOWER(product_name) LIKE ?
+                    OR LOWER(product_name) LIKE ?
+                    OR LOWER(product_name) LIKE ?
+                )
+                AND image_url != '' AND image_url IS NOT NULL
+                ORDER BY
+                    CASE
+                        WHEN LOWER(product_name) LIKE ? THEN 1
+                        WHEN LOWER(product_name) LIKE ? THEN 2
+                        ELSE 3
+                    END
+                LIMIT ? OFFSET ?
+                """,
+                (
+                    q_lower,
+                    f"{q_lower} %",
+                    f"% {q_lower}",
+                    f"% {q_lower} %",
+                    f"{q_lower} %",
+                    f"% {q_lower} %",
+                    per_page + 1,
+                    offset,
+                ),
+            ).fetchall()
+    elif search_type == "standard":
         db_rows = cursor.execute(
-            """
-            SELECT code, product_name, brands, allergens_tags AS allergens, labels_tags AS labels, image_url
-            FROM grocery_products
-            WHERE product_name LIKE ? OR brands LIKE ?
-            LIMIT 50
-        """,
-            (f"%{query}%", f"%{query}%"),
+          """
+          SELECT code, product_name, brands, allergens_tags AS allergens, labels_tags AS labels, image_url
+          FROM grocery_products
+          WHERE UPPER(brands) = 'STANDARD BRAND'
+            AND image_url != '' AND image_url IS NOT NULL
+          LIMIT ? OFFSET ?
+          """,
+          (per_page + 1, offset),
         ).fetchall()
     else:
-        # If no search query, display 24 sample products with images by default
+        # Default when no search keyword is entered
         db_rows = cursor.execute(
             """
             SELECT code, product_name, brands, allergens_tags AS allergens, labels_tags AS labels, image_url
             FROM grocery_products
             WHERE image_url != '' AND image_url IS NOT NULL
-            LIMIT 24
-        """
+            AND UPPER(brands) != 'STANDARD BRAND'
+            LIMIT ? OFFSET ?
+            """,
+            (per_page + 1, offset),
         ).fetchall()
 
     conn.close()
 
-    for row in db_rows:
-        products.append(dict(row))
+    has_more = len(db_rows) > per_page
+    products = [dict(row) for row in db_rows[:per_page]]
 
-    return render_template("grocery.html", products=products, query=query)
+    if request.args.get("ajax") == "1":
+        return jsonify({
+            "products": products,
+            "has_more": has_more
+        })
 
+    return render_template(
+        "grocery.html",
+        products=products,
+        query=query,
+        search_type=search_type,
+        has_more=has_more,
+    )
+
+# 7. API for Ingredient Substitutions
+@app.route("/api/substitutions/<ingredient_name>")
+def get_substitutions(ingredient_name):
+    """Trả về danh sách các lựa chọn thay thế cho 1 nguyên liệu bị hạn chế."""
+    conn = get_db_connection()
+    rows = conn.execute(
+        """
+        SELECT substitute_ingredient, tag_category, diet_suitability, ratio, note, image_url
+        FROM ingredient_substitutions
+        WHERE LOWER(original_ingredient) = LOWER(?)
+    """,
+        (ingredient_name.strip(),),
+    ).fetchall()
+    conn.close()
+
+    substitutes = []
+    for row in rows:
+        substitutes.append({
+            "substitute_ingredient": row["substitute_ingredient"],
+            "tag_category": row["tag_category"],
+            "diet_suitability": row["diet_suitability"],
+            "ratio": row["ratio"],
+            "note": row["note"],
+            "image_url": row["image_url"],
+        })
+
+    return {"original": ingredient_name, "substitutions": substitutes}
 
 if __name__ == "__main__":
     init_db()  # Automatically create tables & indexes if they don't exist
