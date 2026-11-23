@@ -66,10 +66,10 @@
                     </div>
                 </div>
             </div>
-            <!-- The list for Recipes and Brand -->
+            <!-- The list for Recipes -->
             <div class="dropdown">
                 <a href="/#recipes-section" class="dropdown-toggle">
-                    Recipes & Brands <span class="arrow-down">&#9662;</span>
+                    Recipes Search <span class="arrow-down">&#9662;</span>
                 </a>
                 <div class="dropdown-menu">
                     <div class="dropdown-header">QUICK ACCESS</div>
@@ -95,9 +95,8 @@
 
                 </div>
             </div>
-            <a href="/#restaurants">Restaurant Finder</a>
+            <a href="{{ url_for('grocery_search') }}"> Product & Brands </a>
             <a href="/#safety">Our Safety Standard</a>
-            <a href="/#faq">FAQ</a>
         </nav>
         <div class="auth-buttons">
             {% if current_user.is_authenticated %}
@@ -176,7 +175,6 @@
                     <h4 class="footer-col-title">RESOURCES</h4>
                     <ul>
                         <li><a href="#">Diet Guides</a></li>
-                        <li><a href="/#faq">FAQ</a></li>
                         <li><a href="#">Community Stories</a></li>
                         <li><a href="#">Clinical Disclaimers</a></li>
                     </ul>

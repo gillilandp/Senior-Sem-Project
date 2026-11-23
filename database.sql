@@ -310,3 +310,14 @@ INSERT INTO ingredients (ingredient_name, category) VALUES
 ('Bananas', 'fruit'),
 ('Strawberries', 'fruit');
 
+-- 
+CREATE TABLE IF NOT EXISTS ingredient_substitutions (
+    sub_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    original_ingredient TEXT NOT NULL,      -- Nguyên liệu cần tránh (vd: 'milk', 'butter', 'white rice')
+    substitute_ingredient TEXT NOT NULL,    -- Nguyên liệu thay thế (vd: 'almond milk', 'coconut milk')
+    tag_category TEXT NOT NULL,             -- Map trực tiếp với filter_tags: 'dairy', 'meat', 'gluten', 'high_gi', v.v.
+    diet_suitability TEXT,                  -- Thù hợp với: 'PCOS, Vegan, Dairy-free'
+    ratio TEXT DEFAULT '1:1',               -- Tỷ lệ thay thế (vd: '1:1', '1/2 cup for 1 cup')
+    note TEXT,                              -- Gợi ý chế biến (vd: 'Hợp làm bánh', 'Hợp nấu sốt')
+    image_url TEXT                          -- Link ảnh chuẩn TheMealDB
+);

@@ -40,11 +40,40 @@
             <h3>🛒 Ingredients & Quantities</h3>
             <ul class="ingredients-list">
                 {% for item in ingredients %}
-                <li class="ing-item">
-                    <img src="https://www.themealdb.com/images/ingredients/{{ item.name }}-Small.png"
-                        alt="{{ item.name }}" class="ing-icon">
-                    <span class="ing-name">{{ item.name }}</span>
-                    <span class="ing-measure">{{ item.measure }}</span>
+                <li class="ing-item-wrapper" style="list-style: none; margin-bottom: 12px;">
+                    <!-- Ingredient (original ingredient of yours) -->
+                    <div class="ing-item">
+                        <img src="https://www.themealdb.com/images/ingredients/{{ item.name }}-Small.png"
+                            alt="{{ item.name }}" class="ing-icon">
+                        <span class="ing-name">{{ item.name }}</span>
+                        <span class="ing-measure">{{ item.measure }}</span>
+                    </div>
+
+                    <!-- Suggestions substitutions  -->
+                    {% if item.substitutions %}
+                    <div class="sub-container" style="margin-top: 6px; padding-left: 40px;">
+                        <details
+                            style="background: #fffcf3; border: 1px solid #ffdd75; border-radius: 8px; padding: 8px 12px;">
+                            <summary style="cursor: pointer; font-weight: 600; color: #D84315; font-size: 0.88rem;">
+                                🔄 Yes {{ item.substitutions|length }} substitution options for {{ item.name }}
+                            </summary>
+                            <div style="margin-top: 8px;">
+                                {% for sub in item.substitutions %}
+                                <div
+                                    style="display: flex; align-items: center; gap: 10px; margin-top: 6px; padding-top: 6px; border-top: 1px dashed #FFE082;">
+                                    <img src="{{ sub.image_url }}" alt="{{ sub.substitute_ingredient }}" width="32"
+                                        height="32" style="border-radius: 4px; object-fit: cover;">
+                                    <div style="font-size: 0.85rem;">
+                                        <strong style="color: #2E7D32;">{{ sub.substitute_ingredient }}</strong>
+                                        <span
+                                            style="background: #E8F5E9; color: #2E7D32; padding: 1px 6px; border-radius: 4px; font-size: 0.75rem;">Ratio {{ sub.ratio }}</span>
+                                        <div style="color: #555;">{{ sub.note }}</div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </details>
+                    </div>
+                    {% endif %}
                 </li>
                 {% endfor %}
             </ul>

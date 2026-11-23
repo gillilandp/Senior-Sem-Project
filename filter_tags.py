@@ -62,18 +62,18 @@ def check_dietary_labels(meal):
         'parmigiano-reggiano', 'puff pastry'
     ]
 
-    plant_milk_keywords = [
-        'coconut milk', 'almond milk', 'soy milk',
-        'soya milk', 'oat milk', 'rice milk',
-        'cashew milk', 'hemp milk'
+    non_dairy_replacements = [
+        'coconut milk', 'almond milk', 'soy milk', 'soya milk', 
+        'oat milk', 'rice milk', 'cashew milk', 'hemp milk',
+        'coconut cream', 'cashew cream', 'vegan butter', 'vegan cheese'
     ]
 
     def has_dairy():
         for ingredient in ingredients:
             clean_ingredient = ingredient
-            for plant_milk in plant_milk_keywords:
+            for non_dairy in non_dairy_replacements:
                 clean_ingredient = re.sub(
-                    r'(?<![a-z0-9])' + re.escape(plant_milk) + r'(?![a-z0-9])',
+                    r'(?<![a-z0-9])' + re.escape(non_dairy) + r'(?![a-z0-9])',
                     '',
                     clean_ingredient
                 )
@@ -323,7 +323,6 @@ def process_and_update_db():
         raise
     finally:
         conn.close()
-
 
 if __name__ == '__main__':
     process_and_update_db()
