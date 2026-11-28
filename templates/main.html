@@ -7,27 +7,55 @@
 <!-- 1.Hero Section -->
 <section class="hero-section">
     <div class="hero-content">
-        <span class="sub-caption">YOUR DIET, SIMPLIFIED & VALIDATED</span>
-        <h1 class="hero-title">Transition to a new diet with complete confidence.</h1>
-        <p class="hero-description">
-            SafePlate walks beside you as you navigate food allergies, wellness choices, or new restrictions. Set
-            your profile, instantly discover safe recipes, grocery brands, and local restaurants—certified safe for
-            you.
-        </p>
-        <div class="hero-actions">
-            <a href="{{ url_for('profile') }}" class="button-primary">Build Your Free Profile &rarr;</a>
-            <a href="{{ url_for('search_recipes', match_profile='true') }}" class="button-secondary">
-                ✨ View Matched Recipes &rarr;
-            </a>
-        </div>
-        <div class="social-proof">
-            <div class="avatar-group">
-                <img src="https://via.placeholder.com/32" alt="Dietitian 1">
-                <img src="https://via.placeholder.com/32" alt="Dietitian 2">
-                <img src="https://via.placeholder.com/32" alt="Dietitian 3">
+                {% if current_user.is_authenticated %}
+
+            <span class="sub-caption">YOUR PERSONALIZED FOOD JOURNEY</span>
+
+            <h1 class="hero-title">
+                Welcome back, {{ current_user.email.split('@')[0] | capitalize }}!
+            </h1>
+
+            <p class="hero-description">
+                Eating well should be simple. Discover delicious recipes
+                tailored to your dietary preferences, explore new meals,
+                and enjoy a more personalized food experience with SafePlate.
+            </p>
+
+            <div class="hero-actions">
+                <a href="{{ url_for('search_recipes', match_profile='true') }}" class="button-primary">
+                    Explore My Recipes &rarr;
+                </a>
+
+                <a href="{{ url_for('profile') }}" class="button-secondary">
+                    Manage My Dietary Profile &rarr;
+                </a>
             </div>
-            <span>Reviewed by our panel of <strong>Certified Dietitians & Clinicians</strong></span>
-        </div>
+
+        {% else %}
+
+            <span class="sub-caption">YOUR DIET, SIMPLIFIED & VALIDATED</span>
+
+            <h1 class="hero-title">
+                Transition to a new diet with complete confidence.
+            </h1>
+
+            <p class="hero-description">
+                SafePlate walks beside you as you navigate food allergies,
+                wellness choices, or new restrictions. Create your profile
+                and discover recipes that match your dietary needs.
+            </p>
+
+            <div class="hero-actions">
+                <a href="{{ url_for('profile') }}" class="button-primary">
+                    Build Your Free Profile &rarr;
+                </a>
+
+                <a href="{{ url_for('search_recipes', match_profile='true') }}" class="button-secondary">
+                    ✨ View Matched Recipes &rarr;
+                </a>
+            </div>
+
+        {% endif %}
     </div>
     <div class="hero-image">
         <img src="{{ url_for('static', filename='BalancedDiet.png') }}" alt="Healthy Food Bowl">
@@ -184,72 +212,6 @@
     </div>
 </section>
 
-<!-- 5. Grocery Staples Section -->
-<section class="grocery-section">
-    <div class="section-header">
-        <span class="sub-caption">SMART GROCERY NAVIGATION</span>
-        <h2 class="section-title">Safe supermarket staples</h2>
-        <p class="section-subtitle">Skip reading microscopic labels. We scan manufacturer lines and cross-contact
-            certifications for you.</p>
-    </div>
-
-    <div class="brands-grid">
-        <div class="brand-card">
-            <div class="brand-icon">📦</div>
-            <div class="brand-info">
-                <h3 class="brand-name">Siete Foods</h3>
-                <p class="brand-desc">Grain-free tortillas & chips</p>
-
-                <span class="badge-tag">CELIAC SAFE</span>
-            </div>
-        </div>
-
-        <div class="brand-card">
-            <div class="brand-icon">🥛</div>
-            <div class="brand-info">
-                <h3 class="brand-name">Oatly</h3>
-                <p class="brand-desc">Dairy-free oat milks</p>
-
-                <span class="badge-tag">NUT-FREE FACTORY</span>
-            </div>
-        </div>
-
-        <div class="brand-card">
-            <div class="brand-icon">🍲</div>
-            <div class="brand-info">
-                <h3 class="brand-name">Amy's Kitchen</h3>
-                <p class="brand-desc">Organic convenient soups</p>
-
-                <span class="badge-tag">VERIFIED VEGAN</span>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- 7. Trust Promise Section -->
-<section class="promise-section">
-    <div class="promise-content">
-        <span class="sub-caption">THE SAFEPLATE PROMISE</span>
-        <h2 class="section-title">Trust is built on verification, not clinical guess</h2>
-        <p class="promise-desc">
-            Diet transitions are highly personal. We hold our systems to rigorous medical food safety standards
-            without claiming to substitute professional medical advice.
-        </p>
-
-        <ul class="promise-list">
-            <li><span>✓</span> Every recommended recipe undergoes double-blind ingredient classification.</li>
-            <li><span>✓</span> Cross-contact hazards are flagged directly by production standard experts.</li>
-            <li><span>✓</span> Dietitian-curated substitute list maps out simple alternatives for difficult
-                ingredients.</li>
-            <li><span>✓</span> Transparent non-medical boundaries: We encourage verification protocols alongside
-                clinical consultation.</li>
-        </ul>
-    </div>
-
-    <div class="promise-image">
-        <img src="https://via.placeholder.com/450x400" alt="Dietitian holding fresh vegetables">
-    </div>
-</section>
 <section class="faq-section">
     <div class="section-header">
         <span class="sub-caption">GOT QUESTIONS?</span>

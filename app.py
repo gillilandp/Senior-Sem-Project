@@ -745,7 +745,7 @@ def profile():
         conn.close()
 
         flash("Your profile has been updated successfully!", "success")
-        return redirect(url_for("profile"))
+        return redirect(url_for("home"))
 
     user = conn.execute(
         """
